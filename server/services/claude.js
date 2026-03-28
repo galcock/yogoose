@@ -2,6 +2,14 @@ const Anthropic = require('@anthropic-ai/sdk');
 
 const client = new Anthropic();
 
+function getTzAbbr(timezone) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short' }).formatToParts(new Date());
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart ? tzPart.value : timezone;
+  } catch { return timezone; }
+}
+
 function getSystemPrompt(timezone) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', {
@@ -12,10 +20,15 @@ function getSystemPrompt(timezone) {
     hour: 'numeric', minute: '2-digit',
     timeZone: timezone
   });
+  const tzAbbr = getTzAbbr(timezone);
 
-  return `You are Yogoose, a fast AI search assistant. Today is ${dateStr}, and the current time is ${timeStr} (${timezone}).
+  return `You are Yogoose, a fast AI search assistant. Today is ${dateStr}, and the current time is ${timeStr} ${tzAbbr}.
 
-IMPORTANT: The user is in the ${timezone} timezone. ALL times you mention MUST be converted to their local timezone. Never show UTC or other timezone times without converting first.
+IMPORTANT TIMEZONE RULES:
+- The user is in the ${timezone} timezone (${tzAbbr}).
+- ALL times you mention MUST be in ${tzAbbr}. Always append "${tzAbbr}" after every time. Example: "7:30 PM ${tzAbbr}"
+- NEVER show UTC, ET, CT, or any other timezone unless specifically asked. Convert everything to ${tzAbbr}.
+- NEVER omit the timezone abbreviation from times. Always write "7:30 PM ${tzAbbr}", never just "7:30 PM".
 
 Your responses should be:
 - Concise and direct — lead with the answer, not the reasoning
