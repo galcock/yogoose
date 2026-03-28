@@ -87,13 +87,24 @@ app.get('/api/search', (req, res) => {
 });
 
 // Weather forecast API
+// Cache weather for 30 minutes
+let weatherCache = { data: null, expires: 0 };
+
 app.get('/api/weather', async (req, res) => {
+  if (weatherCache.data && Date.now() < weatherCache.expires) {
+    return res.json(weatherCache.data);
+  }
   const forecast = await get7DayForecast();
-  res.json(forecast || []);
+  const result = forecast || [];
+  weatherCache = { data: result, expires: Date.now() + 30 * 60 * 1000 };
+  res.json(result);
 });
 
-// Link map — returns brand names mapped to URLs for auto-linking
+// Link map — returns brand names mapped to URLs for auto-linking (cached permanently)
+let linkMapCache = null;
+
 app.get('/api/linkmap', (req, res) => {
+  if (linkMapCache) return res.json(linkMapCache);
   const sites = require('./data/sites.json');
   const map = {};
   for (const site of sites) {
@@ -162,24 +173,41 @@ app.get('/api/linkmap', (req, res) => {
     'Iowa State': 'https://cyclones.com',
     "St. John's": 'https://redstormsports.com',
   });
+  linkMapCache = map;
   res.json(map);
 });
 
 // News feed API
+// Cache news for 10 minutes
+let newsCache = { data: null, expires: 0 };
+
 app.get('/api/news', async (req, res) => {
+  if (newsCache.data && Date.now() < newsCache.expires) {
+    return res.json(newsCache.data);
+  }
   try {
     const articles = await getTopHeadlines(10);
-    res.json(articles.map(a => ({
+    const result = articles.map(a => ({
       ...a,
       timeAgo: timeAgo(a.publishedAt)
-    })));
+    }));
+    newsCache = { data: result, expires: Date.now() + 10 * 60 * 1000 };
+    res.json(result);
   } catch (err) {
     res.json([]);
   }
 });
 
 // Ambient ticker — lazy-loaded tidbits for the homepage
+// Cache for 15 minutes to avoid burning API calls on every page load
+let ambientCache = { data: null, expires: 0 };
+
 app.get('/api/ambient', async (req, res) => {
+  // Serve cached result if fresh
+  if (ambientCache.data && Date.now() < ambientCache.expires) {
+    return res.json(ambientCache.data);
+  }
+
   const tz = req.query.tz || 'America/Los_Angeles';
   try {
     const Anthropic = require('@anthropic-ai/sdk');
@@ -219,7 +247,10 @@ Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Net
     if (match) {
       const items = JSON.parse(match[0]);
       // Clean any remaining HTML tags from items
-      res.json(items.map(item => item.replace(/<[^>]*>/g, '').trim()));
+      const cleaned = items.map(item => item.replace(/<[^>]*>/g, '').trim());
+      // Cache for 15 minutes
+      ambientCache = { data: cleaned, expires: Date.now() + 15 * 60 * 1000 };
+      res.json(cleaned);
     } else {
       res.json([]);
     }
