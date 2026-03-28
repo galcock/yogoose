@@ -87,6 +87,11 @@ app.get('/{*path}', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Yogoose running at http://localhost:${PORT}`);
-});
+// Local dev: listen on port. Vercel: export the app.
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(PORT, () => {
+    console.log(`Yogoose running at http://localhost:${PORT}`);
+  });
+}
