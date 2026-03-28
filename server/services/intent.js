@@ -206,23 +206,45 @@ function detectIntent(query) {
   }
 
   // 7. Fuzzy match for single-word queries (typo correction)
+  // Only triggers when: first letter matches, not a common English word, distance is small
   if (words.length === 1 && normalized.length >= 3) {
-    let bestMatch = null;
-    let bestDist = Infinity;
-    const maxDist = normalized.length <= 4 ? 1 : 2;
+    const COMMON_WORDS = new Set([
+      'cooking', 'booking', 'looking', 'working', 'talking', 'walking', 'making', 'taking',
+      'going', 'being', 'doing', 'having', 'getting', 'saying', 'thinking', 'feeling',
+      'running', 'coming', 'playing', 'reading', 'writing', 'eating', 'sleeping', 'buying',
+      'selling', 'living', 'dying', 'giving', 'finding', 'telling', 'asking', 'trying',
+      'using', 'calling', 'moving', 'leaving', 'turning', 'starting', 'showing', 'hearing',
+      'growing', 'keeping', 'setting', 'putting', 'standing', 'losing', 'paying', 'meeting',
+      'sitting', 'speaking', 'rising', 'opening', 'closing', 'holding', 'learning',
+      'weather', 'water', 'world', 'place', 'house', 'money', 'music', 'phone', 'paper',
+      'power', 'light', 'night', 'story', 'point', 'woman', 'child', 'thing', 'party',
+      'state', 'school', 'heart', 'human', 'young', 'small', 'large', 'great', 'right',
+      'still', 'every', 'after', 'other', 'never', 'again', 'under', 'often', 'early',
+      'later', 'three', 'seven', 'eight', 'black', 'white', 'green', 'space', 'short',
+      'price', 'order', 'store', 'stock', 'trade', 'board', 'class', 'court', 'round',
+      'watch', 'drive', 'stand', 'break', 'clear', 'plant', 'cover', 'table', 'blood'
+    ]);
 
-    for (const [alias, entry] of aliasMap) {
-      // Only compare similar-length strings
-      if (Math.abs(alias.length - normalized.length) > maxDist) continue;
-      const dist = levenshtein(normalized, alias);
-      if (dist <= maxDist && dist < bestDist) {
-        bestDist = dist;
-        bestMatch = entry;
+    if (!COMMON_WORDS.has(normalized)) {
+      let bestMatch = null;
+      let bestDist = Infinity;
+      const maxDist = normalized.length <= 4 ? 1 : 2;
+
+      for (const [alias, entry] of aliasMap) {
+        // First letter must match (typos rarely change the first letter)
+        if (alias[0] !== normalized[0]) continue;
+        // Only compare similar-length strings
+        if (Math.abs(alias.length - normalized.length) > maxDist) continue;
+        const dist = levenshtein(normalized, alias);
+        if (dist <= maxDist && dist < bestDist) {
+          bestDist = dist;
+          bestMatch = entry;
+        }
       }
-    }
 
-    if (bestMatch) {
-      return { type: 'navigate', url: bestMatch.url, name: bestMatch.name, confidence: 0.7 };
+      if (bestMatch) {
+        return { type: 'navigate', url: bestMatch.url, name: bestMatch.name, confidence: 0.7 };
+      }
     }
   }
 
