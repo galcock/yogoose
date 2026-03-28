@@ -87,7 +87,7 @@ app.get('/api/search', (req, res) => {
 });
 
 // Weather forecast API
-// Cache weather for 30 minutes
+// Cache weather for 6 hours
 let weatherCache = { data: null, expires: 0 };
 
 app.get('/api/weather', async (req, res) => {
@@ -96,7 +96,7 @@ app.get('/api/weather', async (req, res) => {
   }
   const forecast = await get7DayForecast();
   const result = forecast || [];
-  weatherCache = { data: result, expires: Date.now() + 30 * 60 * 1000 };
+  weatherCache = { data: result, expires: Date.now() + 6 * 60 * 60 * 1000 };
   res.json(result);
 });
 
@@ -178,7 +178,7 @@ app.get('/api/linkmap', (req, res) => {
 });
 
 // News feed API
-// Cache news for 10 minutes
+// Cache news for 4 hours
 let newsCache = { data: null, expires: 0 };
 
 app.get('/api/news', async (req, res) => {
@@ -191,7 +191,7 @@ app.get('/api/news', async (req, res) => {
       ...a,
       timeAgo: timeAgo(a.publishedAt)
     }));
-    newsCache = { data: result, expires: Date.now() + 10 * 60 * 1000 };
+    newsCache = { data: result, expires: Date.now() + 4 * 60 * 60 * 1000 };
     res.json(result);
   } catch (err) {
     res.json([]);
@@ -248,8 +248,8 @@ Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Net
       const items = JSON.parse(match[0]);
       // Clean any remaining HTML tags from items
       const cleaned = items.map(item => item.replace(/<[^>]*>/g, '').trim());
-      // Cache for 15 minutes
-      ambientCache = { data: cleaned, expires: Date.now() + 15 * 60 * 1000 };
+      // Cache for 8 hours (refreshes ~3x per day)
+      ambientCache = { data: cleaned, expires: Date.now() + 8 * 60 * 60 * 1000 };
       res.json(cleaned);
     } else {
       res.json([]);
