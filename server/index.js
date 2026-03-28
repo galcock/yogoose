@@ -5,7 +5,7 @@ const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { detectIntent, getAutocompleteSuggestions } = require('./services/intent');
+const { detectIntent, getAutocompleteSuggestions, getRelatedSites } = require('./services/intent');
 const { streamResponse } = require('./services/claude');
 
 const app = express();
@@ -66,6 +66,12 @@ app.get('/api/search', (req, res) => {
 
   // AI response — stream it
   streamResponse(intent.query || q, res);
+});
+
+// Related sites for AI queries
+app.get('/api/related', (req, res) => {
+  const q = req.query.q || '';
+  res.json(getRelatedSites(q));
 });
 
 // Health check

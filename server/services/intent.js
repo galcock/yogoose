@@ -305,4 +305,75 @@ function getAutocompleteSuggestions(query, limit = 7) {
   return results.slice(0, limit);
 }
 
-module.exports = { detectIntent, getAutocompleteSuggestions };
+// --- Related sites for AI queries ---
+// Find sites that might be relevant to what the user searched
+
+function getRelatedSites(query, limit = 3) {
+  if (!query) return [];
+
+  const normalized = query.toLowerCase().trim();
+  const stopWords = new Set(['the', 'what', 'how', 'why', 'where', 'when', 'who', 'which', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'can', 'could', 'should', 'will', 'would', 'has', 'have', 'had', 'for', 'and', 'but', 'not', 'you', 'your', 'with', 'this', 'that', 'from', 'they', 'been', 'its', 'than', 'into', 'about', 'between', 'through', 'best', 'most', 'more', 'some', 'any', 'all', 'very', 'just', 'also', 'much', 'many', 'way', 'make', 'like', 'get', 'use']);
+  const words = normalized.split(/\s+/).filter(w => w.length >= 3 && !stopWords.has(w));
+  const results = [];
+  const seen = new Set();
+
+  for (const entry of allEntries) {
+    const nameLower = entry.name.toLowerCase();
+    const allText = [nameLower, ...entry.aliases].join(' ');
+
+    // Check if any query word matches a site name or alias
+    for (const word of words) {
+      if (allText.includes(word) && !seen.has(entry.url)) {
+        seen.add(entry.url);
+        results.push({ name: entry.name, url: entry.url });
+        break;
+      }
+    }
+
+    if (results.length >= limit) break;
+  }
+
+  // If no word matches, try category-based matching
+  if (results.length === 0) {
+    const categoryKeywords = {
+      sports: ['score', 'game', 'team', 'player', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball'],
+      news: ['news', 'today', 'latest', 'breaking', 'politics', 'election', 'war', 'president'],
+      entertainment: ['movie', 'film', 'show', 'tv', 'actor', 'actress', 'rating', 'review', 'trailer'],
+      shopping: ['buy', 'price', 'cheap', 'deal', 'coupon', 'sale', 'order', 'shop', 'store'],
+      food: ['restaurant', 'recipe', 'food', 'cook', 'eat', 'dinner', 'lunch', 'breakfast', 'delivery'],
+      travel: ['flight', 'hotel', 'travel', 'trip', 'vacation', 'book', 'airline', 'airport'],
+      health: ['symptom', 'health', 'doctor', 'medicine', 'treatment', 'disease', 'pain', 'medical'],
+      finance: ['stock', 'invest', 'bank', 'credit', 'loan', 'mortgage', 'tax', 'money', 'crypto', 'bitcoin'],
+      tech: ['code', 'programming', 'developer', 'software', 'bug', 'api', 'github', 'deploy'],
+      education: ['learn', 'course', 'study', 'tutorial', 'class', 'university', 'college', 'school'],
+      realestate: ['house', 'apartment', 'rent', 'home', 'property', 'real estate', 'mortgage'],
+      gaming: ['game', 'gaming', 'play', 'console', 'pc', 'steam', 'xbox', 'playstation', 'nintendo'],
+      music: ['song', 'music', 'album', 'artist', 'playlist', 'listen', 'concert']
+    };
+
+    let matchedCategory = null;
+    for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+      for (const word of words) {
+        if (keywords.some(k => word.startsWith(k) || k.startsWith(word))) {
+          matchedCategory = cat;
+          break;
+        }
+      }
+      if (matchedCategory) break;
+    }
+
+    if (matchedCategory) {
+      for (const site of sites) {
+        if (site.category === matchedCategory && !seen.has(site.url)) {
+          seen.add(site.url);
+          results.push({ name: site.name, url: site.url });
+          if (results.length >= limit) break;
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+module.exports = { detectIntent, getAutocompleteSuggestions, getRelatedSites };

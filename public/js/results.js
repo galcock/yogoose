@@ -5,6 +5,7 @@
   const responseArea = document.getElementById('responseArea');
   const loading = document.getElementById('loading');
   const poweredBy = document.getElementById('poweredBy');
+  const relatedSites = document.getElementById('relatedSites');
   const container = document.getElementById('resultsSearchContainer');
   const dropdown = document.getElementById('resultsAutocomplete');
 
@@ -103,6 +104,32 @@
     cursor.remove();
     aiDiv.innerHTML = renderMarkdown(fullText);
     poweredBy.style.display = 'block';
+
+    // Fetch related sites
+    fetchRelatedSites(query);
+  }
+
+  // --- Related sites ---
+
+  async function fetchRelatedSites(q) {
+    try {
+      const res = await fetch(`/api/related?q=${encodeURIComponent(q)}`);
+      if (!res.ok) return;
+      const sites = await res.json();
+      if (sites.length === 0) return;
+
+      relatedSites.innerHTML = `
+        <h4>Were you looking for...</h4>
+        ${sites.map(s => `
+          <a href="${s.url}" class="related-link">
+            <span class="related-link-icon">&rarr;</span>
+            <span class="related-link-name">${escapeHtml(s.name)}</span>
+            <span class="related-link-url">${s.url.replace('https://', '')}</span>
+          </a>
+        `).join('')}
+      `;
+      relatedSites.style.display = 'block';
+    } catch (e) {}
   }
 
   // --- Markdown renderer ---

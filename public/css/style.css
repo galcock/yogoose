@@ -374,6 +374,55 @@ body {
   to { opacity: 1; transform: translateY(-4px); }
 }
 
+/* === RELATED SITES === */
+.related-sites {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.related-sites h4 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.related-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text);
+  transition: background 0.12s;
+}
+
+.related-link:hover {
+  background: var(--surface-hover);
+}
+
+.related-link-icon {
+  color: var(--navigate-accent);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.related-link-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.related-link-url {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
 /* === POWERED BY === */
 .powered-by {
   margin-top: 32px;
