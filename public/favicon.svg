@@ -1,19 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <!-- Background circle for visibility on any browser background -->
-  <circle cx="60" cy="60" r="58" fill="#7c5cfc"/>
-  <!-- Body -->
-  <ellipse cx="62" cy="78" rx="22" ry="18" fill="white"/>
-  <!-- Neck -->
-  <path d="M56 65 C52 45, 44 34, 46 24" stroke="white" stroke-width="10" stroke-linecap="round" fill="none"/>
-  <!-- Head -->
-  <circle cx="44" cy="22" r="10" fill="white"/>
-  <!-- Eye -->
-  <circle cx="40" cy="20" r="2.2" fill="#1a1a1a"/>
-  <!-- Beak -->
-  <path d="M34 24 L24 22 L34 28 Z" fill="#f59e0b"/>
-  <!-- Wing -->
-  <path d="M72 70 C80 62, 88 65, 85 75 C82 82, 74 80, 72 76" fill="#e0e0e0"/>
-  <!-- Feet -->
-  <path d="M52 94 L46 102 M52 94 L52 102 M52 94 L58 102" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M70 94 L64 102 M70 94 L70 102 M70 94 L76 102" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+  <rect width='64' height='64' rx='14' fill='#7c5cfc'/>
+  <path d='M36 54 C36 40, 34 32, 28 24 C24 18, 22 14, 24 10' stroke='white' stroke-width='8' stroke-linecap='round' fill='none'/>
+  <circle cx='24' cy='10' r='9' fill='white'/>
+  <circle cx='21' cy='9' r='2.2' fill='#2d1b69'/>
+  <circle cx='20.2' cy='8.2' r='0.8' fill='white'/>
+  <path d='M15 12.5 L6 11 L15 16 Z' fill='#f59e0b'/>
 </svg>
