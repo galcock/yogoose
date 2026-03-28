@@ -684,6 +684,18 @@ function getRelatedSites(query, limit = 3) {
     }
   }
 
+  // 0.5. Check if the query contains a known site name (multi-word match)
+  for (const entry of allEntries) {
+    for (const alias of entry.aliases) {
+      if (alias.length >= 5 && normalized.includes(alias) && !seen.has(entry.url)) {
+        seen.add(entry.url);
+        results.push({ name: entry.name, url: entry.url });
+        if (results.length >= limit) return results;
+        break;
+      }
+    }
+  }
+
   // 1. Match topics by keywords FIRST (most reliable)
   const matchedTopics = new Set();
   for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
