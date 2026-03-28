@@ -245,7 +245,7 @@ function detectIntent(query) {
     if (!GENERIC_WORDS.has(normalized)) {
       let bestMatch = null;
       let bestDist = Infinity;
-      const maxDist = normalized.length <= 4 ? 1 : 2;
+      const maxDist = 1; // Only allow 1 character difference to prevent false matches
 
       for (const [alias, entry] of aliasMap) {
         // First letter must match (typos rarely change the first letter)
