@@ -380,7 +380,7 @@ const TOPIC_SITES = {
   movies: [
     { name: 'Rotten Tomatoes', url: 'https://rottentomatoes.com' },
     { name: 'IMDb', url: 'https://imdb.com' },
-    { name: 'Letterboxd', url: 'https://letterboxd.com' }
+    { name: 'Fresh Kernels', url: 'https://freshkernels.com' }
   ],
   tv: [
     { name: 'IMDb', url: 'https://imdb.com' },
@@ -567,7 +567,7 @@ const TOPIC_KEYWORDS = {
   science: ['science', 'scientific', 'research', 'experiment', 'hypothesis', 'theory', 'laboratory'],
   math: ['math', 'calculus', 'algebra', 'geometry', 'equation', 'formula', 'theorem', 'probability', 'statistics', 'integral', 'derivative', 'matrix', 'logarithm', 'trigonometry', 'fraction', 'percentage', 'calculate'],
   history: ['history', 'historical', 'ancient', 'medieval', 'century', 'civilization', 'empire', 'dynasty', 'revolution', 'war', 'battle', 'king', 'queen', 'president'],
-  sports: ['sport', 'score', 'team', 'player', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'boxing', 'ufc', 'mma', 'championship', 'playoff', 'tournament', 'athlete', 'coach', 'league'],
+  sports: ['sport', 'score', 'team', 'player', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'boxing', 'ufc', 'mma', 'championship', 'playoff', 'tournament', 'athlete', 'coach', 'league', 'lakers', 'celtics', 'warriors', 'bulls', 'knicks', 'nets', 'heat', 'bucks', 'sixers', 'nuggets', 'suns', 'mavericks', 'clippers', 'cowboys', 'patriots', 'chiefs', 'eagles', 'packers', 'niners', '49ers', 'steelers', 'ravens', 'bills', 'broncos', 'dolphins', 'yankees', 'dodgers', 'mets', 'cubs', 'braves', 'astros', 'phillies', 'padres', 'redsox', 'red sox', 'tonight', 'game tonight', 'game today', 'game time', 'standings', 'roster', 'schedule', 'halftime', 'super bowl', 'world series', 'march madness', 'final four'],
   news: ['news', 'latest', 'breaking', 'headline', 'current event', 'update'],
   politics: ['politic', 'election', 'democrat', 'republican', 'congress', 'senate', 'governor', 'policy', 'legislation', 'vote', 'ballot', 'campaign'],
   movies: ['movie', 'film', 'actor', 'actress', 'director', 'oscar', 'cinema', 'box office', 'trailer', 'rating', 'review', 'screenplay', 'documentary'],
@@ -590,7 +590,7 @@ const TOPIC_KEYWORDS = {
   programming: ['programming', 'code', 'developer', 'software', 'bug', 'api', 'function', 'variable', 'loop', 'array', 'database', 'server', 'frontend', 'backend', 'framework', 'library', 'python', 'javascript', 'java', 'react', 'node', 'css', 'html', 'sql'],
   coding: ['coding', 'debug', 'compile', 'runtime', 'syntax', 'algorithm', 'data structure'],
   ai: ['artificial intelligence', 'machine learning', 'neural network', 'deep learning', 'nlp', 'gpt', 'llm', 'chatbot', 'model', 'training data'],
-  gaming: ['gaming', 'video game', 'gamer', 'esport', 'rpg', 'fps', 'mmorpg', 'multiplayer', 'indie game', 'console'],
+  gaming: ['gaming', 'video game', 'gamer', 'esport', 'rpg', 'fps', 'mmorpg', 'multiplayer', 'indie game', 'console', 'fortnite', 'minecraft', 'roblox', 'valorant', 'overwatch', 'zelda', 'mario', 'elden ring', 'playstation', 'xbox', 'nintendo', 'steam'],
   education: ['education', 'learn', 'course', 'study', 'tutor', 'degree', 'university', 'college', 'school', 'scholarship', 'exam', 'test', 'homework', 'assignment', 'lecture'],
   realestate: ['real estate', 'house', 'apartment', 'rent', 'property', 'condo', 'townhouse', 'listing', 'sqft', 'bedroom', 'landlord', 'tenant'],
   jobs: ['job', 'career', 'hiring', 'resume', 'interview', 'salary', 'remote work', 'freelance', 'employer', 'applicant', 'position', 'opening'],
@@ -628,7 +628,10 @@ function getRelatedSites(query, limit = 3) {
   const matchedTopics = new Set();
   for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
     for (const word of words) {
-      if (keywords.some(k => word === k || (word.length >= 4 && (word.startsWith(k) || k.startsWith(word))) || normalized.includes(k))) {
+      if (keywords.some(k => {
+          if (k.includes(' ')) return normalized.includes(k); // multi-word keywords match full query
+          return word === k || (word.length >= 4 && k.length >= 4 && (word.startsWith(k) || k.startsWith(word)));
+        })) {
         matchedTopics.add(topic);
         break;
       }

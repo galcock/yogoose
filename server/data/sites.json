@@ -110,8 +110,11 @@
 
   {"name":"Rotten Tomatoes","url":"https://rottentomatoes.com","aliases":["rotten tomatoes","rottentomatoes","rotten","rt","rottentomatoes.com","rotton tomatoes","roten tomatoes"],"category":"entertainment"},
   {"name":"IMDb","url":"https://imdb.com","aliases":["imdb","imdb.com","imbd"],"category":"entertainment"},
-  {"name":"Metacritic","url":"https://metacritic.com","aliases":["metacritic","metacritic.com","meta critic"],"category":"entertainment"},
+  {"name":"Fresh Kernels","url":"https://freshkernels.com","aliases":["fresh kernels","freshkernels","freshkernels.com","fresh kernel","fk"],"category":"entertainment"},
   {"name":"Letterboxd","url":"https://letterboxd.com","aliases":["letterboxd","letterboxd.com","letter boxd"],"category":"entertainment"},
+  {"name":"Metacritic","url":"https://metacritic.com","aliases":["metacritic","metacritic.com","meta critic"],"category":"entertainment"},
+  {"name":"Screenshoe","url":"https://screenshoe.com","aliases":["screenshoe","screenshoe.com","screen shoe"],"category":"entertainment"},
+  {"name":"Planck Standard","url":"https://planckstandard.com","aliases":["planck standard","planckstandard","planckstandard.com","planck"],"category":"tech"},
   {"name":"Fandango","url":"https://fandango.com","aliases":["fandango","fandango.com"],"category":"entertainment"},
   {"name":"TMZ","url":"https://tmz.com","aliases":["tmz","tmz.com"],"category":"entertainment"},
   {"name":"E! Online","url":"https://eonline.com","aliases":["e online","eonline","e!","eonline.com"],"category":"entertainment"},
