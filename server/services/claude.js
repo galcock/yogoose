@@ -99,39 +99,33 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
       messages: [{ role: 'user', content: query }]
     });
 
-    let usedSearch = false;
-    let currentBlockIndex = -1;
-    let firstTextBlock = -1;
-    let buffer = '';
+    // Collect the full response, then stream only the final text content
+    // This prevents narration ("Let me search...", "I'll look that up...") from leaking
+    const response = await stream.finalMessage();
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_start') {
-        currentBlockIndex++;
-        if (event.content_block?.type === 'text' && firstTextBlock === -1) {
-          firstTextBlock = currentBlockIndex;
-        }
-        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
-          usedSearch = true;
-        }
+    // Extract only text blocks from the final response
+    let finalText = '';
+    let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
+
+    if (hasSearch) {
+      // When search was used, take only the LAST text block (the actual answer)
+      const textBlocks = response.content.filter(b => b.type === 'text');
+      if (textBlocks.length > 0) {
+        finalText = textBlocks[textBlocks.length - 1].text;
       }
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        // If search was used and this is the first text block, it's narration — skip it
-        if (usedSearch && currentBlockIndex === firstTextBlock) {
-          continue;
-        }
-        // If search hasn't been used yet and this is the first block, buffer it
-        // in case search comes later
-        if (!usedSearch && currentBlockIndex === firstTextBlock) {
-          buffer += event.delta.text;
-          continue;
-        }
-        res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
-      }
+    } else {
+      // No search — concatenate all text blocks
+      finalText = response.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('');
     }
 
-    // If we buffered text and no search was used, flush the buffer
-    if (buffer && !usedSearch) {
-      res.write(`data: ${JSON.stringify({ type: 'text', content: buffer })}\n\n`);
+    // Stream the clean text in chunks for the typing effect
+    const chunkSize = 12;
+    for (let i = 0; i < finalText.length; i += chunkSize) {
+      const chunk = finalText.slice(i, i + chunkSize);
+      res.write(`data: ${JSON.stringify({ type: 'text', content: chunk })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
@@ -167,33 +161,27 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
       messages
     });
 
-    let usedSearch = false;
-    let currentBlockIndex = -1;
-    let firstTextBlock = -1;
-    let buffer = '';
+    const response = await stream.finalMessage();
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_start') {
-        currentBlockIndex++;
-        if (event.content_block?.type === 'text' && firstTextBlock === -1) {
-          firstTextBlock = currentBlockIndex;
-        }
-        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
-          usedSearch = true;
-        }
+    let finalText = '';
+    let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
+
+    if (hasSearch) {
+      const textBlocks = response.content.filter(b => b.type === 'text');
+      if (textBlocks.length > 0) {
+        finalText = textBlocks[textBlocks.length - 1].text;
       }
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        if (usedSearch && currentBlockIndex === firstTextBlock) continue;
-        if (!usedSearch && currentBlockIndex === firstTextBlock) {
-          buffer += event.delta.text;
-          continue;
-        }
-        res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
-      }
+    } else {
+      finalText = response.content
+        .filter(b => b.type === 'text')
+        .map(b => b.text)
+        .join('');
     }
 
-    if (buffer && !usedSearch) {
-      res.write(`data: ${JSON.stringify({ type: 'text', content: buffer })}\n\n`);
+    const chunkSize = 12;
+    for (let i = 0; i < finalText.length; i += chunkSize) {
+      const chunk = finalText.slice(i, i + chunkSize);
+      res.write(`data: ${JSON.stringify({ type: 'text', content: chunk })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
