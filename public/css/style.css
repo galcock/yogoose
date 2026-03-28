@@ -626,6 +626,105 @@ body {
   }
 }
 
+/* === WEATHER WIDGET === */
+.weather-widget {
+  animation: fadeIn 0.3s ease;
+}
+
+.weather-today {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 28px;
+  background: linear-gradient(135deg, #4a90d9 0%, #7c5cfc 100%);
+  border-radius: 16px;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.weather-today-icon {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.weather-today-temp {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weather-today-desc {
+  font-size: 18px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.weather-today-range {
+  font-size: 14px;
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.weather-today-location {
+  font-size: 13px;
+  opacity: 0.6;
+  margin-top: 6px;
+}
+
+.weather-forecast {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.weather-day {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 14px 8px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.weather-day-active {
+  border-color: var(--ai-accent);
+  background: var(--ai-bg);
+}
+
+.weather-day-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.weather-day-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.weather-day-temps {
+  font-size: 13px;
+}
+
+.weather-high {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.weather-low {
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+@media (max-width: 600px) {
+  .weather-today { padding: 20px; gap: 16px; }
+  .weather-today-icon { font-size: 48px; }
+  .weather-today-temp { font-size: 36px; }
+  .weather-day { min-width: 60px; padding: 10px 4px; }
+}
+
 /* === FINANCIAL CHART === */
 .financial-chart {
   margin-bottom: 20px;

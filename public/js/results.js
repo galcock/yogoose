@@ -94,6 +94,10 @@
           renderNewsFeed();
           return;
         }
+        if (data.type === 'weather') {
+          renderWeather();
+          return;
+        }
       }
     } catch (err) {
       responseArea.innerHTML = '<div class="ai-response"><p>Something went wrong. Please try again.</p></div>';
@@ -528,6 +532,63 @@
       poweredBy.style.display = 'block';
     } catch (err) {
       responseArea.innerHTML = '<div class="ai-response"><p>Unable to load news. Try again.</p></div>';
+    }
+  }
+
+  // --- Weather Widget ---
+
+  async function renderWeather() {
+    try {
+      const res = await fetch('/api/weather');
+      const forecast = await res.json();
+
+      if (!forecast || forecast.length === 0) {
+        // Fallback to AI response
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const aiRes = await fetch(`/api/search?q=weather+today&tz=${encodeURIComponent(tz)}&force_ai=1`);
+        streamAIResponse(aiRes);
+        return;
+      }
+
+      // Fade out goose
+      const goose = responseArea.querySelector('.goose-loading');
+      if (goose) {
+        goose.classList.add('goose-fade-out');
+        await new Promise(r => setTimeout(r, 400));
+      }
+
+      const today = forecast[0];
+
+      responseArea.innerHTML = `
+        <div class="weather-widget">
+          <div class="weather-today">
+            <div class="weather-today-icon">${today.icon}</div>
+            <div class="weather-today-info">
+              <div class="weather-today-temp">${today.high}°F</div>
+              <div class="weather-today-desc">${today.desc}</div>
+              <div class="weather-today-range">Low ${today.low}°F · High ${today.high}°F</div>
+              <div class="weather-today-location">Los Angeles, CA</div>
+            </div>
+          </div>
+          <div class="weather-forecast">
+            ${forecast.map(day => `
+              <div class="weather-day${day.day === 'Today' ? ' weather-day-active' : ''}">
+                <div class="weather-day-name">${day.day}</div>
+                <div class="weather-day-icon">${day.icon}</div>
+                <div class="weather-day-temps">
+                  <span class="weather-high">${day.high}°</span>
+                  <span class="weather-low">${day.low}°</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      showRelatedSites();
+      poweredBy.style.display = 'block';
+    } catch (err) {
+      responseArea.innerHTML = '<div class="ai-response"><p>Unable to load weather. Try again.</p></div>';
     }
   }
 

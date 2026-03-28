@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const { detectIntent, getAutocompleteSuggestions, getRelatedSites } = require('./services/intent');
 const { streamResponse, streamFollowup } = require('./services/claude');
 const { getTopHeadlines, timeAgo } = require('./services/news');
+const { get7DayForecast } = require('./services/weather');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,9 +74,22 @@ app.get('/api/search', (req, res) => {
     return res.json({ type: 'news' });
   }
 
+  // Check if this is a weather query — include forecast widget
+  const weatherWords = ['weather', 'forecast', 'temperature', 'rain today', 'weather today', 'weather tomorrow', 'weather this week'];
+  const isWeather = weatherWords.some(w => (intent.query || q).toLowerCase().trim() === w || (intent.query || q).toLowerCase().includes(w));
+  if (isWeather) {
+    return res.json({ type: 'weather' });
+  }
+
   // AI response — stream it with user's timezone
   const tz = req.query.tz || 'America/Los_Angeles';
   streamResponse(intent.query || q, res, tz);
+});
+
+// Weather forecast API
+app.get('/api/weather', async (req, res) => {
+  const forecast = await get7DayForecast();
+  res.json(forecast || []);
 });
 
 // Link map — returns brand names mapped to URLs for auto-linking
