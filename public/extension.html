@@ -113,18 +113,15 @@
       text-decoration: none;
       transition: background 0.15s, transform 0.1s;
     }
-    .chrome-btn:hover { background: #6a4ce0; transform: translateY(-1px); }
-    .center { text-align: center; }
-    .hint { font-size: 12px; color: var(--text-secondary); }
-    .hint code { background: var(--surface-hover); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-    .wizard-step { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .next-btn {
-      display: block; width: 100%; margin-top: 24px; padding: 14px; font-size: 15px;
-      font-weight: 600; font-family: var(--font); color: #fff; background: var(--navigate-accent);
-      border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s;
+    .setup-all-steps { display: flex; flex-direction: column; gap: 16px; }
+    .step-card {
+      padding: 20px; border-radius: 12px; background: var(--surface);
+      border: 1px solid var(--border);
     }
-    .next-btn:hover { background: #2d9348; }
+    .step-card-success { border-color: var(--navigate-accent); background: rgba(52,168,83,0.05); }
+    .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .step-card h3 { font-size: 16px; margin: 0; }
+    .step-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 4px 0; }
     .fields-guide { margin: 16px 0; }
     .field-row {
       display: flex; align-items: center; gap: 10px; padding: 12px 14px;
@@ -149,73 +146,62 @@
     </a>
 
     <h1>Use YoGoose in Your URL Bar</h1>
-    <p class="subtitle">Replace Google in your address bar. Every search — whether you want a website or an AI answer — goes through Yogoose.</p>
+    <p class="subtitle">Takes 30 seconds. All steps stay visible so you don't lose them.</p>
 
-    <div class="setup-wizard" id="wizard">
-      <div class="wizard-step" id="step1">
-        <div class="step">
+    <div class="setup-all-steps">
+      <div class="step-card">
+        <div class="step-header">
           <div class="step-number">1</div>
-          <div class="step-content">
-            <h3>Open your search engine settings</h3>
-            <p>Click the button below — it'll take you right there.</p>
-          </div>
+          <h3>Open Chrome's search engine settings</h3>
         </div>
-        <div class="center">
-          <button class="chrome-btn" id="openSettingsBtn">
-            Copy Settings Link
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-          <p class="hint" id="settingsHint" style="margin-top:12px;">Copies <code>chrome://settings/searchEngines</code> — paste it in your address bar and hit Enter.</p>
+        <p>Copy this link, paste it in your address bar, and hit Enter:</p>
+        <div class="field-row">
+          <code class="field-value">chrome://settings/searchEngines</code>
+          <button class="copy-small" id="copySettingsLink" data-copy="chrome://settings/searchEngines">Copy</button>
         </div>
-        <button class="next-btn" id="next1">I'm there, next step &rarr;</button>
       </div>
 
-      <div class="wizard-step" id="step2" style="display:none;">
-        <div class="step">
+      <div class="step-card">
+        <div class="step-header">
           <div class="step-number">2</div>
-          <div class="step-content">
-            <h3>Click "Add" under Site Search</h3>
-            <p>Scroll down to <strong>"Site search"</strong> and click the <strong>Add</strong> button. Then fill in:</p>
-          </div>
+          <h3>Scroll down to "Site search" and click Add</h3>
         </div>
+        <p>NOT the "Search engines" section at the top — scroll further down to <strong>"Site search"</strong> and click <strong>Add</strong>.</p>
+        <p style="margin-top:12px;">Fill in these three fields (copy each one):</p>
         <div class="fields-guide">
           <div class="field-row">
-            <span class="field-label">Name:</span>
-            <span class="field-value" id="nameField">Yogoose</span>
+            <span class="field-label">Name</span>
+            <span class="field-value">Yogoose</span>
             <button class="copy-small" data-copy="Yogoose">Copy</button>
           </div>
           <div class="field-row">
-            <span class="field-label">Shortcut:</span>
-            <span class="field-value" id="shortcutField">yogoose.com</span>
+            <span class="field-label">Shortcut</span>
+            <span class="field-value">yogoose.com</span>
             <button class="copy-small" data-copy="yogoose.com">Copy</button>
           </div>
           <div class="field-row">
-            <span class="field-label">URL:</span>
-            <span class="field-value" id="urlField">https://yogoose.com/results.html?q=%s</span>
+            <span class="field-label">URL</span>
+            <span class="field-value" style="font-size:11px;">https://yogoose.com/results.html?q=%s</span>
             <button class="copy-small" data-copy="https://yogoose.com/results.html?q=%s">Copy</button>
           </div>
         </div>
-        <button class="next-btn" id="next2">Done, next step &rarr;</button>
+        <p style="margin-top:8px;font-size:13px;color:var(--text-secondary);">Then click <strong>Add</strong> to save it.</p>
       </div>
 
-      <div class="wizard-step" id="step3" style="display:none;">
-        <div class="step">
+      <div class="step-card">
+        <div class="step-header">
           <div class="step-number">3</div>
-          <div class="step-content">
-            <h3>Make it your default</h3>
-            <p>Find <strong>Yogoose</strong> in the list, click the <strong>three dots</strong> (&hellip;) next to it, and select <strong>"Make default"</strong>.</p>
-          </div>
+          <h3>Make Yogoose your default</h3>
         </div>
-        <button class="next-btn" id="next3">Done! &check;</button>
+        <p>Find <strong>Yogoose</strong> in the Site search list. Click the <strong>three dots</strong> (&hellip;) next to it and select <strong>"Make default"</strong>.</p>
       </div>
 
-      <div class="wizard-step" id="stepDone" style="display:none;">
-        <div class="setup-complete">
-          <div style="font-size:48px;margin-bottom:16px;">&#10003;</div>
-          <h2>You're all set!</h2>
-          <p>Now just type anything in your address bar — Yogoose will take it from here.</p>
-          <p style="margin-top:8px;color:var(--text-secondary);">Try typing <strong>"weather"</strong> or <strong>"youtube"</strong> to see the magic.</p>
+      <div class="step-card step-card-success">
+        <div class="step-header">
+          <div class="step-number" style="background:var(--navigate-accent);">&#10003;</div>
+          <h3>That's it!</h3>
         </div>
+        <p>Now every search in your address bar goes through Yogoose. Type <strong>"weather"</strong> or <strong>"youtube"</strong> to try it out.</p>
       </div>
     </div>
   </div>
@@ -227,37 +213,13 @@
   </footer>
 
   <script>
-    // Settings link copy
-    document.getElementById('openSettingsBtn').addEventListener('click', () => {
-      navigator.clipboard.writeText('chrome://settings/searchEngines').then(() => {
-        const btn = document.getElementById('openSettingsBtn');
-        btn.innerHTML = 'Copied! Now paste in your address bar &#10003;';
-        btn.style.background = '#34a853';
-        document.getElementById('settingsHint').innerHTML = '<strong>Paste it in your address bar and hit Enter!</strong>';
-      });
-    });
-
-    // Wizard navigation
-    document.getElementById('next1').addEventListener('click', () => {
-      document.getElementById('step1').style.display = 'none';
-      document.getElementById('step2').style.display = 'block';
-    });
-    document.getElementById('next2').addEventListener('click', () => {
-      document.getElementById('step2').style.display = 'none';
-      document.getElementById('step3').style.display = 'block';
-    });
-    document.getElementById('next3').addEventListener('click', () => {
-      document.getElementById('step3').style.display = 'none';
-      document.getElementById('stepDone').style.display = 'block';
-    });
-
-    // Copy buttons
     document.querySelectorAll('.copy-small').forEach(btn => {
       btn.addEventListener('click', () => {
         navigator.clipboard.writeText(btn.dataset.copy).then(() => {
           const orig = btn.textContent;
           btn.textContent = 'Copied!';
-          setTimeout(() => { btn.textContent = orig; }, 1500);
+          btn.style.background = '#34a853';
+          setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 2000);
         });
       });
     });
