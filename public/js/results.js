@@ -427,7 +427,7 @@
       'djia': 'TVC:DJI', 'dow': 'TVC:DJI', 'dow jones': 'TVC:DJI',
       'sp500': 'FOREXCOM:SPXUSD', 's&p': 'FOREXCOM:SPXUSD', 's&p 500': 'FOREXCOM:SPXUSD', 'sp 500': 'FOREXCOM:SPXUSD',
       'nasdaq': 'NASDAQ:NDX', 'nasdaq composite': 'TVC:IXIC',
-      'markets': 'FOREXCOM:SPXUSD', 'market': 'FOREXCOM:SPXUSD', 'stock market': 'FOREXCOM:SPXUSD',
+      'stock market': 'FOREXCOM:SPXUSD', 'markets': 'FOREXCOM:SPXUSD', 'market today': 'FOREXCOM:SPXUSD',
       'bitcoin': 'BITSTAMP:BTCUSD', 'btc': 'BITSTAMP:BTCUSD',
       'ethereum': 'BITSTAMP:ETHUSD', 'eth': 'BITSTAMP:ETHUSD',
       'apple stock': 'NASDAQ:AAPL', 'aapl': 'NASDAQ:AAPL',
@@ -435,7 +435,7 @@
       'nvidia stock': 'NASDAQ:NVDA', 'nvda': 'NASDAQ:NVDA',
       'google stock': 'NASDAQ:GOOGL', 'googl': 'NASDAQ:GOOGL',
       'amazon stock': 'NASDAQ:AMZN', 'amzn': 'NASDAQ:AMZN',
-      'meta stock': 'NASDAQ:META', 'meta': 'NASDAQ:META',
+      'meta stock': 'NASDAQ:META',
       'microsoft stock': 'NASDAQ:MSFT', 'msft': 'NASDAQ:MSFT',
     };
 
