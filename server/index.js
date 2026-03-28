@@ -67,7 +67,10 @@ app.get('/api/search', (req, res) => {
 
   // AI response — stream it with user's timezone
   const tz = req.query.tz || 'America/Los_Angeles';
-  streamResponse(intent.query || q, res, tz);
+  // Check if this is a news query
+  const newsWords = ['news', 'headlines', 'breaking news', 'today news', 'current events', 'top stories'];
+  const isNews = newsWords.some(w => (intent.query || q).toLowerCase().includes(w));
+  streamResponse(intent.query || q, res, tz, isNews ? 'news' : null);
 });
 
 // Follow-up with conversation history

@@ -92,7 +92,26 @@ const WEB_SEARCH_TOOL = {
   type: 'web_search_20250305'
 };
 
-async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
+const NEWS_FORMAT_INSTRUCTION = `
+FORMAT YOUR RESPONSE AS A NEWS FEED. Use EXACTLY this markdown format for each story:
+
+## [Headline text](URL)
+**Source Name** · Time ago
+
+Brief 1-2 sentence summary of the story.
+
+---
+
+Include 8-10 top news stories. Search for "top news today" and "breaking news" to get the latest headlines. Each story MUST have:
+- A headline as an h2 with a link to the source article
+- Source name and time (bolded source, then · then time)
+- 1-2 sentence summary
+- A horizontal rule (---) between stories
+
+DO NOT include any intro text like "Here are today's top stories". Just start with the first headline.
+`;
+
+async function streamResponse(query, res, timezone = 'America/Los_Angeles', format = null) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -101,16 +120,24 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
   });
 
   try {
+    let systemPrompt = getSystemPrompt(timezone);
+    if (format === 'news') {
+      systemPrompt += '\n\n' + NEWS_FORMAT_INSTRUCTION;
+    }
+
     const stream = await client.messages.stream({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: getSystemPrompt(timezone),
+      model: format === 'news' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001',
+      max_tokens: format === 'news' ? 2048 : 1024,
+      system: systemPrompt,
       tools: [WEB_SEARCH_TOOL],
-      messages: [{ role: 'user', content: query }]
+      messages: [{ role: 'user', content: format === 'news' ? 'Show me today\'s top news headlines' : query }]
     });
 
-    // Collect the full response, then stream only the final text content
-    // This prevents narration ("Let me search...", "I'll look that up...") from leaking
+    // Send format info to client
+    if (format) {
+      res.write(`data: ${JSON.stringify({ type: 'format', format })}\n\n`);
+    }
+
     const response = await stream.finalMessage();
 
     // Extract only text blocks from the final response

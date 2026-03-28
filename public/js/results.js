@@ -80,6 +80,7 @@
 
     let fullText = '';
     let firstToken = true;
+    let responseFormat = null;
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -99,6 +100,13 @@
 
         try {
           const event = JSON.parse(jsonStr);
+          if (event.type === 'format') {
+            responseFormat = event.format;
+            if (responseFormat === 'news') {
+              aiDiv.className = 'ai-response news-feed';
+            }
+            continue;
+          }
           if (event.type === 'text') {
             // On first token: fade out goose, then replace with AI response
             if (firstToken) {

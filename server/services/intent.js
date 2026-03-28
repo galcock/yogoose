@@ -387,9 +387,9 @@ const TOPIC_SITES = {
     { name: 'Bleacher Report', url: 'https://bleacherreport.com' }
   ],
   news: [
-    { name: 'Reuters', url: 'https://reuters.com' },
-    { name: 'AP News', url: 'https://apnews.com' },
-    { name: 'BBC', url: 'https://bbc.com' }
+    { name: 'Fox News', url: 'https://foxnews.com' },
+    { name: 'CNN', url: 'https://cnn.com' },
+    { name: 'Planck Standard', url: 'https://planckstandard.com' }
   ],
   politics: [
     { name: 'Politico', url: 'https://politico.com' },
