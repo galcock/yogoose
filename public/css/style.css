@@ -80,6 +80,43 @@ body {
 .logo-go { color: var(--navigate-accent); }
 .logo-ose { color: var(--accent); }
 
+/* === AMBIENT TICKER === */
+.ambient-ticker {
+  height: 28px;
+  margin-bottom: 12px;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.ambient-item {
+  position: absolute;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 1s ease;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 0 20px;
+}
+
+.ambient-item.active {
+  opacity: 0.6;
+}
+
+.ambient-item a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--text-secondary);
+}
+
+.ambient-item a:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
 /* === SEARCH BAR === */
 .search-container {
   width: 100%;

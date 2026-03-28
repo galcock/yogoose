@@ -53,6 +53,8 @@
       <div class="autocomplete" id="autocomplete"></div>
     </div>
 
+    <div class="ambient-ticker" id="ambientTicker" aria-hidden="true"></div>
+
     <div class="cta-section">
       <p class="cta-text">
         Stop switching between Google and ChatGPT.<br>
@@ -73,5 +75,40 @@
   </footer>
 
   <script src="/js/search.js"></script>
+  <script>
+    // Ambient ticker — lazy loaded, never blocks page
+    setTimeout(() => {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      fetch(`/api/ambient?tz=${encodeURIComponent(tz)}`)
+        .then(r => r.json())
+        .then(items => {
+          if (!items || items.length === 0) return;
+          const ticker = document.getElementById('ambientTicker');
+          if (!ticker) return;
+
+          // Create all items
+          items.forEach(text => {
+            const div = document.createElement('div');
+            div.className = 'ambient-item';
+            div.textContent = text;
+            ticker.appendChild(div);
+          });
+
+          // Cycle through them
+          let current = 0;
+          const els = ticker.querySelectorAll('.ambient-item');
+          if (els.length === 0) return;
+
+          function show() {
+            els.forEach(el => el.classList.remove('active'));
+            els[current].classList.add('active');
+            current = (current + 1) % els.length;
+          }
+          show();
+          setInterval(show, 5000);
+        })
+        .catch(() => {}); // Silently fail — ambient is non-critical
+    }, 2000); // Wait 2s after page load before fetching
+  </script>
 </body>
 </html>

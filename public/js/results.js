@@ -515,6 +515,15 @@
         </div>
       `;
 
+      // Handle broken images — replace with gradient fallback
+      responseArea.querySelectorAll('.news-hero-image, .news-card-image').forEach(el => {
+        if (!el.style.backgroundImage || el.style.backgroundImage === 'none') return;
+        const img = new Image();
+        const url = el.style.backgroundImage.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
+        img.onerror = () => { el.classList.add('news-card-no-image'); el.style.backgroundImage = 'none'; };
+        img.src = url;
+      });
+
       showRelatedSites();
       poweredBy.style.display = 'block';
     } catch (err) {

@@ -144,6 +144,40 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+// Ambient ticker — lazy-loaded tidbits for the homepage
+app.get('/api/ambient', async (req, res) => {
+  const tz = req.query.tz || 'America/Los_Angeles';
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic();
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz
+    });
+
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      tools: [{ name: 'web_search', type: 'web_search_20250305' }],
+      messages: [{ role: 'user', content: `Today is ${dateStr}. Give me exactly 5 short one-line tidbits that someone in Los Angeles would find interesting right now. Include local sports games happening today/tonight with times in PT, weather, and any trending local news. Format as a JSON array of strings, nothing else. Each item should be under 80 characters. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "72°F and sunny in LA today"]` }]
+    });
+
+    // Extract JSON from the response
+    const textBlocks = response.content.filter(b => b.type === 'text');
+    const text = textBlocks[textBlocks.length - 1]?.text || '[]';
+    const match = text.match(/\[[\s\S]*\]/);
+    if (match) {
+      res.json(JSON.parse(match[0]));
+    } else {
+      res.json([]);
+    }
+  } catch (err) {
+    console.error('Ambient error:', err.message);
+    res.json([]);
+  }
+});
+
 // Follow-up with conversation history
 app.post('/api/followup', (req, res) => {
   const { query, history, tz } = req.body;
