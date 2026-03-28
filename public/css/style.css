@@ -365,6 +365,15 @@ body {
   100% { opacity: 0; transform: scale(0.8) translateY(-20px); }
 }
 
+.goose-status-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ai-accent);
+  font-weight: 500;
+  min-height: 18px;
+  animation: gooseTextPulse 1.5s ease-in-out infinite;
+}
+
 .goose-loading-text {
   margin-top: 16px;
   font-size: 15px;

@@ -41,8 +41,32 @@
           <path d="M32 30 Q28 32, 30 34" stroke="#1a1a1a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
         </svg>
         <p class="goose-loading-text">Goose is on it...</p>
+        <p class="goose-status-text" id="gooseStatus"></p>
       </div>
     `;
+
+    // Show contextual status based on query type
+    const lower = q.toLowerCase();
+    const statusEl = document.getElementById('gooseStatus');
+    if (statusEl) {
+      if (['news', 'headlines', 'breaking news', 'top stories'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Building your news feed...';
+      } else if (['score', 'tonight', 'game'].some(w => lower.includes(w)) ||
+                 ['lakers', 'warriors', 'celtics', 'cowboys', 'yankees', 'dodgers', 'chiefs', 'eagles'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Checking live scores & schedules...';
+      } else if (['weather', 'forecast', 'rain', 'temperature'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Checking the forecast...';
+      } else if (['stock', 'market', 'djia', 'sp500', 'nasdaq', 'bitcoin', 'btc', 'eth'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Pulling market data...';
+      } else if (['showtime', 'theater', 'movie'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Finding showtimes near you...';
+      } else if (['recipe', 'cook', 'bake'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Finding the best recipe...';
+      } else if (['flight', 'hotel', 'travel'].some(w => lower.includes(w))) {
+        statusEl.textContent = 'Searching travel options...';
+      }
+    }
+
     poweredBy.style.display = 'none';
     relatedSites.style.display = 'none';
 
