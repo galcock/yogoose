@@ -6,6 +6,9 @@
   const loading = document.getElementById('loading');
   const poweredBy = document.getElementById('poweredBy');
   const relatedSites = document.getElementById('relatedSites');
+  const followupBar = document.getElementById('followupBar');
+  const followupInput = document.getElementById('followupInput');
+  const followupSend = document.getElementById('followupSend');
   const container = document.getElementById('resultsSearchContainer');
   const dropdown = document.getElementById('resultsAutocomplete');
 
@@ -117,7 +120,8 @@
     cursor.remove();
     aiDiv.innerHTML = renderMarkdown(fullText);
     poweredBy.style.display = 'block';
-
+    followupBar.style.display = 'flex';
+    followupInput.focus();
   }
 
   // --- Related sites ---
@@ -282,6 +286,24 @@
 
   document.addEventListener('click', (e) => {
     if (!container.contains(e.target)) hideSuggestions();
+  });
+
+  // --- Follow-up ---
+
+  function sendFollowup() {
+    const q = followupInput.value.trim();
+    if (!q) return;
+    followupInput.value = '';
+    input.value = q;
+    window.location.href = `/results.html?q=${encodeURIComponent(q)}`;
+  }
+
+  followupSend.addEventListener('click', sendFollowup);
+  followupInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendFollowup();
+    }
   });
 
   // --- Utility ---

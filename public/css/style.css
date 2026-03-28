@@ -465,6 +465,60 @@ body {
   color: var(--text-secondary);
 }
 
+/* === FOLLOW-UP BAR === */
+.followup-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 16px 0 20px;
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+
+.followup-input {
+  flex-grow: 1;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 15px;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.followup-input:focus {
+  border-color: transparent;
+  box-shadow: var(--shadow-hover);
+}
+
+.followup-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.followup-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ai-accent);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.followup-send:hover {
+  background: #6a4ce0;
+}
+
 /* === FOOTER === */
 .footer {
   padding: 16px;

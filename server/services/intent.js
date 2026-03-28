@@ -308,8 +308,293 @@ function getAutocompleteSuggestions(query, limit = 7) {
 // --- Related sites for AI queries ---
 // Find sites that might be relevant to what the user searched
 
+// Topic-to-sites mapping — includes external sites not in our nav DB
+const TOPIC_SITES = {
+  physics: [
+    { name: 'Phys.org', url: 'https://phys.org' },
+    { name: 'Physics Today', url: 'https://physicstoday.org' },
+    { name: 'HyperPhysics', url: 'http://hyperphysics.phy-astr.gsu.edu' }
+  ],
+  chemistry: [
+    { name: 'PubChem', url: 'https://pubchem.ncbi.nlm.nih.gov' },
+    { name: 'Royal Society of Chemistry', url: 'https://rsc.org' },
+    { name: 'ChemSpider', url: 'https://chemspider.com' }
+  ],
+  biology: [
+    { name: 'Nature', url: 'https://nature.com' },
+    { name: 'PubMed', url: 'https://pubmed.ncbi.nlm.nih.gov' },
+    { name: 'Biology Online', url: 'https://biologyonline.com' }
+  ],
+  science: [
+    { name: 'Nature', url: 'https://nature.com' },
+    { name: 'Science Magazine', url: 'https://science.org' },
+    { name: 'Phys.org', url: 'https://phys.org' }
+  ],
+  math: [
+    { name: 'Wolfram MathWorld', url: 'https://mathworld.wolfram.com' },
+    { name: 'Khan Academy', url: 'https://khanacademy.org' },
+    { name: 'Desmos', url: 'https://desmos.com' }
+  ],
+  history: [
+    { name: 'History.com', url: 'https://history.com' },
+    { name: 'Wikipedia', url: 'https://en.wikipedia.org' },
+    { name: 'Britannica', url: 'https://britannica.com' }
+  ],
+  sports: [
+    { name: 'ESPN', url: 'https://espn.com' },
+    { name: 'CBS Sports', url: 'https://cbssports.com' },
+    { name: 'Bleacher Report', url: 'https://bleacherreport.com' }
+  ],
+  news: [
+    { name: 'Reuters', url: 'https://reuters.com' },
+    { name: 'AP News', url: 'https://apnews.com' },
+    { name: 'BBC', url: 'https://bbc.com' }
+  ],
+  politics: [
+    { name: 'Politico', url: 'https://politico.com' },
+    { name: 'AP News', url: 'https://apnews.com' },
+    { name: 'The Hill', url: 'https://thehill.com' }
+  ],
+  movies: [
+    { name: 'Rotten Tomatoes', url: 'https://rottentomatoes.com' },
+    { name: 'IMDb', url: 'https://imdb.com' },
+    { name: 'Letterboxd', url: 'https://letterboxd.com' }
+  ],
+  tv: [
+    { name: 'IMDb', url: 'https://imdb.com' },
+    { name: 'TV Guide', url: 'https://tvguide.com' },
+    { name: 'Rotten Tomatoes', url: 'https://rottentomatoes.com' }
+  ],
+  music: [
+    { name: 'Spotify', url: 'https://open.spotify.com' },
+    { name: 'Genius', url: 'https://genius.com' },
+    { name: 'Pitchfork', url: 'https://pitchfork.com' }
+  ],
+  food: [
+    { name: 'Allrecipes', url: 'https://allrecipes.com' },
+    { name: 'Serious Eats', url: 'https://seriouseats.com' },
+    { name: 'Bon Appetit', url: 'https://bonappetit.com' }
+  ],
+  cooking: [
+    { name: 'Allrecipes', url: 'https://allrecipes.com' },
+    { name: 'Serious Eats', url: 'https://seriouseats.com' },
+    { name: 'Food Network', url: 'https://foodnetwork.com' }
+  ],
+  restaurants: [
+    { name: 'Yelp', url: 'https://yelp.com' },
+    { name: 'OpenTable', url: 'https://opentable.com' },
+    { name: 'TripAdvisor', url: 'https://tripadvisor.com' }
+  ],
+  travel: [
+    { name: 'TripAdvisor', url: 'https://tripadvisor.com' },
+    { name: 'Google Flights', url: 'https://google.com/flights' },
+    { name: 'Booking.com', url: 'https://booking.com' }
+  ],
+  flights: [
+    { name: 'Google Flights', url: 'https://google.com/flights' },
+    { name: 'Kayak', url: 'https://kayak.com' },
+    { name: 'Skyscanner', url: 'https://skyscanner.com' }
+  ],
+  hotels: [
+    { name: 'Booking.com', url: 'https://booking.com' },
+    { name: 'Hotels.com', url: 'https://hotels.com' },
+    { name: 'Airbnb', url: 'https://airbnb.com' }
+  ],
+  health: [
+    { name: 'WebMD', url: 'https://webmd.com' },
+    { name: 'Mayo Clinic', url: 'https://mayoclinic.org' },
+    { name: 'Healthline', url: 'https://healthline.com' }
+  ],
+  medical: [
+    { name: 'Mayo Clinic', url: 'https://mayoclinic.org' },
+    { name: 'WebMD', url: 'https://webmd.com' },
+    { name: 'NIH', url: 'https://nih.gov' }
+  ],
+  fitness: [
+    { name: 'MyFitnessPal', url: 'https://myfitnesspal.com' },
+    { name: 'Strava', url: 'https://strava.com' },
+    { name: 'Healthline', url: 'https://healthline.com' }
+  ],
+  finance: [
+    { name: 'Yahoo Finance', url: 'https://finance.yahoo.com' },
+    { name: 'Bloomberg', url: 'https://bloomberg.com' },
+    { name: 'NerdWallet', url: 'https://nerdwallet.com' }
+  ],
+  stocks: [
+    { name: 'Yahoo Finance', url: 'https://finance.yahoo.com' },
+    { name: 'MarketWatch', url: 'https://marketwatch.com' },
+    { name: 'Bloomberg', url: 'https://bloomberg.com' }
+  ],
+  crypto: [
+    { name: 'CoinGecko', url: 'https://coingecko.com' },
+    { name: 'CoinMarketCap', url: 'https://coinmarketcap.com' },
+    { name: 'Coinbase', url: 'https://coinbase.com' }
+  ],
+  shopping: [
+    { name: 'Amazon', url: 'https://amazon.com' },
+    { name: 'Google Shopping', url: 'https://shopping.google.com' },
+    { name: 'Wirecutter', url: 'https://nytimes.com/wirecutter' }
+  ],
+  tech: [
+    { name: 'TechCrunch', url: 'https://techcrunch.com' },
+    { name: 'The Verge', url: 'https://theverge.com' },
+    { name: 'Ars Technica', url: 'https://arstechnica.com' }
+  ],
+  programming: [
+    { name: 'Stack Overflow', url: 'https://stackoverflow.com' },
+    { name: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
+    { name: 'GitHub', url: 'https://github.com' }
+  ],
+  coding: [
+    { name: 'Stack Overflow', url: 'https://stackoverflow.com' },
+    { name: 'GitHub', url: 'https://github.com' },
+    { name: 'MDN Web Docs', url: 'https://developer.mozilla.org' }
+  ],
+  ai: [
+    { name: 'ChatGPT', url: 'https://chatgpt.com' },
+    { name: 'Hugging Face', url: 'https://huggingface.co' },
+    { name: 'Papers With Code', url: 'https://paperswithcode.com' }
+  ],
+  gaming: [
+    { name: 'IGN', url: 'https://ign.com' },
+    { name: 'Steam', url: 'https://store.steampowered.com' },
+    { name: 'Polygon', url: 'https://polygon.com' }
+  ],
+  education: [
+    { name: 'Khan Academy', url: 'https://khanacademy.org' },
+    { name: 'Coursera', url: 'https://coursera.org' },
+    { name: 'Wikipedia', url: 'https://en.wikipedia.org' }
+  ],
+  realestate: [
+    { name: 'Zillow', url: 'https://zillow.com' },
+    { name: 'Redfin', url: 'https://redfin.com' },
+    { name: 'Realtor.com', url: 'https://realtor.com' }
+  ],
+  jobs: [
+    { name: 'LinkedIn', url: 'https://linkedin.com' },
+    { name: 'Indeed', url: 'https://indeed.com' },
+    { name: 'Glassdoor', url: 'https://glassdoor.com' }
+  ],
+  weather: [
+    { name: 'Weather.com', url: 'https://weather.com' },
+    { name: 'AccuWeather', url: 'https://accuweather.com' },
+    { name: 'Weather Underground', url: 'https://wunderground.com' }
+  ],
+  cars: [
+    { name: 'Edmunds', url: 'https://edmunds.com' },
+    { name: 'Kelley Blue Book', url: 'https://kbb.com' },
+    { name: 'CarGurus', url: 'https://cargurus.com' }
+  ],
+  legal: [
+    { name: 'FindLaw', url: 'https://findlaw.com' },
+    { name: 'Nolo', url: 'https://nolo.com' },
+    { name: 'Avvo', url: 'https://avvo.com' }
+  ],
+  parenting: [
+    { name: 'BabyCenter', url: 'https://babycenter.com' },
+    { name: 'What to Expect', url: 'https://whattoexpect.com' },
+    { name: 'Parents', url: 'https://parents.com' }
+  ],
+  fashion: [
+    { name: 'Vogue', url: 'https://vogue.com' },
+    { name: 'GQ', url: 'https://gq.com' },
+    { name: 'Who What Wear', url: 'https://whowhatwear.com' }
+  ],
+  space: [
+    { name: 'NASA', url: 'https://nasa.gov' },
+    { name: 'Space.com', url: 'https://space.com' },
+    { name: 'SpaceX', url: 'https://spacex.com' }
+  ],
+  astronomy: [
+    { name: 'NASA', url: 'https://nasa.gov' },
+    { name: 'Space.com', url: 'https://space.com' },
+    { name: 'Sky & Telescope', url: 'https://skyandtelescope.org' }
+  ],
+  psychology: [
+    { name: 'Psychology Today', url: 'https://psychologytoday.com' },
+    { name: 'APA', url: 'https://apa.org' },
+    { name: 'Verywell Mind', url: 'https://verywellmind.com' }
+  ],
+  environment: [
+    { name: 'National Geographic', url: 'https://nationalgeographic.com' },
+    { name: 'EPA', url: 'https://epa.gov' },
+    { name: 'Climate.gov', url: 'https://climate.gov' }
+  ],
+  pets: [
+    { name: 'PetMD', url: 'https://petmd.com' },
+    { name: 'AKC', url: 'https://akc.org' },
+    { name: 'Chewy', url: 'https://chewy.com' }
+  ],
+  books: [
+    { name: 'Goodreads', url: 'https://goodreads.com' },
+    { name: 'Amazon Books', url: 'https://amazon.com/books' },
+    { name: 'Audible', url: 'https://audible.com' }
+  ],
+  diy: [
+    { name: 'Instructables', url: 'https://instructables.com' },
+    { name: 'Home Depot', url: 'https://homedepot.com' },
+    { name: 'YouTube', url: 'https://youtube.com' }
+  ]
+};
+
+// Keywords that map to topics
+const TOPIC_KEYWORDS = {
+  physics: ['physics', 'quantum', 'relativity', 'gravity', 'atom', 'particle', 'energy', 'force', 'velocity', 'acceleration', 'momentum', 'electron', 'photon', 'neutron', 'proton', 'thermodynamic', 'electromagnetic', 'nuclear', 'optic', 'wave', 'light', 'speed'],
+  chemistry: ['chemistry', 'chemical', 'molecule', 'element', 'compound', 'reaction', 'acid', 'base', 'periodic', 'bond', 'ion', 'organic', 'inorganic'],
+  biology: ['biology', 'cell', 'dna', 'gene', 'evolution', 'species', 'organism', 'ecosystem', 'bacteria', 'virus', 'protein', 'enzyme'],
+  science: ['science', 'scientific', 'research', 'experiment', 'hypothesis', 'theory', 'laboratory'],
+  math: ['math', 'calculus', 'algebra', 'geometry', 'equation', 'formula', 'theorem', 'probability', 'statistics', 'integral', 'derivative', 'matrix', 'logarithm', 'trigonometry', 'fraction', 'percentage', 'calculate'],
+  history: ['history', 'historical', 'ancient', 'medieval', 'century', 'civilization', 'empire', 'dynasty', 'revolution', 'war', 'battle', 'king', 'queen', 'president'],
+  sports: ['sport', 'score', 'team', 'player', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'tennis', 'golf', 'boxing', 'ufc', 'mma', 'championship', 'playoff', 'tournament', 'athlete', 'coach', 'league'],
+  news: ['news', 'latest', 'breaking', 'headline', 'current event', 'update'],
+  politics: ['politic', 'election', 'democrat', 'republican', 'congress', 'senate', 'governor', 'policy', 'legislation', 'vote', 'ballot', 'campaign'],
+  movies: ['movie', 'film', 'actor', 'actress', 'director', 'oscar', 'cinema', 'box office', 'trailer', 'rating', 'review', 'screenplay', 'documentary'],
+  tv: ['tv show', 'television', 'series', 'episode', 'season', 'streaming', 'sitcom', 'drama', 'reality show'],
+  music: ['music', 'song', 'album', 'artist', 'band', 'singer', 'concert', 'lyric', 'genre', 'rap', 'hip hop', 'rock', 'pop', 'jazz', 'classical', 'playlist', 'Grammy'],
+  food: ['food', 'recipe', 'cook', 'bake', 'ingredient', 'meal', 'dish', 'cuisine', 'diet', 'nutrition', 'calorie', 'vegan', 'vegetarian', 'gluten'],
+  cooking: ['cooking', 'baking', 'roast', 'grill', 'fry', 'saut', 'stew', 'soup', 'pasta', 'bread', 'cake', 'dessert', 'sauce'],
+  restaurants: ['restaurant', 'dining', 'dine', 'eat out', 'takeout', 'delivery', 'brunch', 'cafe', 'bistro', 'bar'],
+  travel: ['travel', 'trip', 'vacation', 'destination', 'tourism', 'itinerary', 'passport', 'visa', 'backpack', 'sightseeing'],
+  flights: ['flight', 'airline', 'airport', 'plane', 'ticket', 'layover', 'boarding', 'baggage'],
+  hotels: ['hotel', 'motel', 'resort', 'hostel', 'accommodation', 'lodging', 'check-in', 'booking'],
+  health: ['health', 'symptom', 'treatment', 'cure', 'diagnos', 'condition', 'disease', 'illness', 'pain', 'remedy', 'wellness', 'vitamin', 'supplement'],
+  medical: ['medical', 'doctor', 'hospital', 'surgery', 'prescription', 'medication', 'patient', 'diagnosis', 'clinic', 'therapy', 'pharmaceutical'],
+  fitness: ['fitness', 'exercise', 'workout', 'gym', 'weight', 'cardio', 'muscle', 'training', 'running', 'yoga', 'stretch'],
+  finance: ['finance', 'financial', 'money', 'budget', 'saving', 'tax', 'income', 'expense', 'interest', 'loan', 'mortgage', 'insurance', 'retire', 'pension'],
+  stocks: ['stock', 'invest', 'market', 'share', 'dividend', 'portfolio', 'bull', 'bear', 'trading', 'ipo', 'nasdaq', 'dow', 'index', 'fund', 'etf'],
+  crypto: ['crypto', 'bitcoin', 'ethereum', 'blockchain', 'token', 'defi', 'nft', 'wallet', 'mining', 'altcoin', 'binance', 'coinbase'],
+  shopping: ['buy', 'price', 'cheap', 'deal', 'coupon', 'discount', 'sale', 'shop', 'store', 'product', 'purchase', 'compare', 'cost'],
+  tech: ['tech', 'technology', 'gadget', 'device', 'smartphone', 'laptop', 'tablet', 'startup', 'silicon valley', 'innovation'],
+  programming: ['programming', 'code', 'developer', 'software', 'bug', 'api', 'function', 'variable', 'loop', 'array', 'database', 'server', 'frontend', 'backend', 'framework', 'library', 'python', 'javascript', 'java', 'react', 'node', 'css', 'html', 'sql'],
+  coding: ['coding', 'debug', 'compile', 'runtime', 'syntax', 'algorithm', 'data structure'],
+  ai: ['artificial intelligence', 'machine learning', 'neural network', 'deep learning', 'nlp', 'gpt', 'llm', 'chatbot', 'model', 'training data'],
+  gaming: ['gaming', 'video game', 'gamer', 'esport', 'rpg', 'fps', 'mmorpg', 'multiplayer', 'indie game', 'console'],
+  education: ['education', 'learn', 'course', 'study', 'tutor', 'degree', 'university', 'college', 'school', 'scholarship', 'exam', 'test', 'homework', 'assignment', 'lecture'],
+  realestate: ['real estate', 'house', 'apartment', 'rent', 'property', 'condo', 'townhouse', 'listing', 'sqft', 'bedroom', 'landlord', 'tenant'],
+  jobs: ['job', 'career', 'hiring', 'resume', 'interview', 'salary', 'remote work', 'freelance', 'employer', 'applicant', 'position', 'opening'],
+  weather: ['weather', 'forecast', 'temperature', 'rain', 'snow', 'storm', 'humidity', 'wind', 'climate', 'sunny', 'cloudy', 'hurricane', 'tornado'],
+  cars: ['car', 'vehicle', 'auto', 'truck', 'suv', 'sedan', 'electric vehicle', 'hybrid', 'mpg', 'horsepower', 'engine', 'transmission', 'dealer', 'lease'],
+  legal: ['law', 'legal', 'lawyer', 'attorney', 'court', 'lawsuit', 'sue', 'contract', 'liability', 'rights', 'regulation', 'statute', 'tort', 'litigation'],
+  parenting: ['parent', 'baby', 'child', 'toddler', 'newborn', 'pregnancy', 'pregnant', 'breastfeed', 'diaper', 'pediatric', 'daycare', 'preschool'],
+  fashion: ['fashion', 'style', 'outfit', 'clothing', 'designer', 'trend', 'wardrobe', 'accessories', 'shoes', 'handbag', 'runway'],
+  space: ['space', 'nasa', 'rocket', 'satellite', 'astronaut', 'mars', 'moon', 'planet', 'solar system', 'orbit', 'launch', 'spacex'],
+  astronomy: ['astronomy', 'star', 'galaxy', 'nebula', 'telescope', 'comet', 'asteroid', 'constellation', 'cosmos', 'universe', 'black hole', 'supernova'],
+  psychology: ['psychology', 'mental health', 'anxiety', 'depression', 'therapy', 'therapist', 'cognitive', 'behavior', 'emotion', 'stress', 'ptsd', 'disorder', 'adhd', 'ocd'],
+  environment: ['environment', 'climate change', 'global warming', 'pollution', 'renewable', 'solar', 'sustainability', 'carbon', 'emission', 'recycle', 'ecosystem', 'biodiversity', 'endangered'],
+  pets: ['pet', 'dog', 'cat', 'puppy', 'kitten', 'breed', 'vet', 'veterinar', 'grooming', 'adoption', 'shelter', 'leash', 'kibble'],
+  books: ['book', 'novel', 'author', 'reading', 'fiction', 'nonfiction', 'literary', 'bestseller', 'chapter', 'publisher', 'genre', 'memoir', 'biography'],
+  diy: ['diy', 'how to build', 'how to fix', 'repair', 'install', 'assemble', 'craft', 'woodwork', 'plumbing', 'electric', 'renovation', 'project', 'tool']
+};
+
+// Default fallback sites for when nothing matches
+const DEFAULT_SITES = [
+  { name: 'Wikipedia', url: 'https://en.wikipedia.org' },
+  { name: 'Reddit', url: 'https://reddit.com' },
+  { name: 'YouTube', url: 'https://youtube.com' }
+];
+
 function getRelatedSites(query, limit = 3) {
-  if (!query) return [];
+  if (!query) return DEFAULT_SITES;
 
   const normalized = query.toLowerCase().trim();
   const stopWords = new Set(['the', 'what', 'how', 'why', 'where', 'when', 'who', 'which', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'can', 'could', 'should', 'will', 'would', 'has', 'have', 'had', 'for', 'and', 'but', 'not', 'you', 'your', 'with', 'this', 'that', 'from', 'they', 'been', 'its', 'than', 'into', 'about', 'between', 'through', 'best', 'most', 'more', 'some', 'any', 'all', 'very', 'just', 'also', 'much', 'many', 'way', 'make', 'like', 'get', 'use']);
@@ -317,63 +602,39 @@ function getRelatedSites(query, limit = 3) {
   const results = [];
   const seen = new Set();
 
-  for (const entry of allEntries) {
-    const nameLower = entry.name.toLowerCase();
-    const allText = [nameLower, ...entry.aliases].join(' ');
-
-    // Check if any query word matches a site name or alias
+  // 1. Match topics by keywords FIRST (most reliable)
+  const matchedTopics = new Set();
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
     for (const word of words) {
-      if (allText.includes(word) && !seen.has(entry.url)) {
-        seen.add(entry.url);
-        results.push({ name: entry.name, url: entry.url });
+      if (keywords.some(k => word === k || (word.length >= 4 && (word.startsWith(k) || k.startsWith(word))) || normalized.includes(k))) {
+        matchedTopics.add(topic);
         break;
       }
     }
-
-    if (results.length >= limit) break;
   }
 
-  // If no word matches, try category-based matching
-  if (results.length === 0) {
-    const categoryKeywords = {
-      sports: ['score', 'game', 'team', 'player', 'nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball'],
-      news: ['news', 'today', 'latest', 'breaking', 'politics', 'election', 'war', 'president'],
-      entertainment: ['movie', 'film', 'show', 'tv', 'actor', 'actress', 'rating', 'review', 'trailer'],
-      shopping: ['buy', 'price', 'cheap', 'deal', 'coupon', 'sale', 'order', 'shop', 'store'],
-      food: ['restaurant', 'recipe', 'food', 'cook', 'eat', 'dinner', 'lunch', 'breakfast', 'delivery'],
-      travel: ['flight', 'hotel', 'travel', 'trip', 'vacation', 'book', 'airline', 'airport'],
-      health: ['symptom', 'health', 'doctor', 'medicine', 'treatment', 'disease', 'pain', 'medical'],
-      finance: ['stock', 'invest', 'bank', 'credit', 'loan', 'mortgage', 'tax', 'money', 'crypto', 'bitcoin'],
-      tech: ['code', 'programming', 'developer', 'software', 'bug', 'api', 'github', 'deploy'],
-      education: ['learn', 'course', 'study', 'tutorial', 'class', 'university', 'college', 'school'],
-      realestate: ['house', 'apartment', 'rent', 'home', 'property', 'real estate', 'mortgage'],
-      gaming: ['game', 'gaming', 'play', 'console', 'pc', 'steam', 'xbox', 'playstation', 'nintendo'],
-      music: ['song', 'music', 'album', 'artist', 'playlist', 'listen', 'concert']
-    };
-
-    let matchedCategory = null;
-    for (const [cat, keywords] of Object.entries(categoryKeywords)) {
-      for (const word of words) {
-        if (keywords.some(k => word.startsWith(k) || k.startsWith(word))) {
-          matchedCategory = cat;
-          break;
-        }
-      }
-      if (matchedCategory) break;
-    }
-
-    if (matchedCategory) {
-      for (const site of sites) {
-        if (site.category === matchedCategory && !seen.has(site.url)) {
-          seen.add(site.url);
-          results.push({ name: site.name, url: site.url });
-          if (results.length >= limit) break;
-        }
+  // Add sites from matched topics
+  for (const topic of matchedTopics) {
+    const topicSites = TOPIC_SITES[topic] || [];
+    for (const site of topicSites) {
+      if (!seen.has(site.url)) {
+        seen.add(site.url);
+        results.push(site);
+        if (results.length >= limit) return results;
       }
     }
   }
 
-  return results;
+  // 3. Always return at least 3 — fill with defaults
+  for (const site of DEFAULT_SITES) {
+    if (!seen.has(site.url)) {
+      seen.add(site.url);
+      results.push(site);
+      if (results.length >= limit) return results;
+    }
+  }
+
+  return results.slice(0, limit);
 }
 
 module.exports = { detectIntent, getAutocompleteSuggestions, getRelatedSites };
