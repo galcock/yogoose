@@ -161,11 +161,11 @@
           </div>
         </div>
         <div class="center">
-          <a href="chrome://settings/searchEngines" class="chrome-btn" id="openSettingsBtn">
-            Open Search Settings
+          <button class="chrome-btn" id="openSettingsBtn">
+            Copy Settings Link
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </a>
-          <p class="hint" style="margin-top:12px;">If the button doesn't work, copy this into your address bar: <code>chrome://settings/searchEngines</code></p>
+          </button>
+          <p class="hint" id="settingsHint" style="margin-top:12px;">Copies <code>chrome://settings/searchEngines</code> — paste it in your address bar and hit Enter.</p>
         </div>
         <button class="next-btn" id="next1">I'm there, next step &rarr;</button>
       </div>
@@ -227,6 +227,16 @@
   </footer>
 
   <script>
+    // Settings link copy
+    document.getElementById('openSettingsBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText('chrome://settings/searchEngines').then(() => {
+        const btn = document.getElementById('openSettingsBtn');
+        btn.innerHTML = 'Copied! Now paste in your address bar &#10003;';
+        btn.style.background = '#34a853';
+        document.getElementById('settingsHint').innerHTML = '<strong>Paste it in your address bar and hit Enter!</strong>';
+      });
+    });
+
     // Wizard navigation
     document.getElementById('next1').addEventListener('click', () => {
       document.getElementById('step1').style.display = 'none';

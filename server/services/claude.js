@@ -99,10 +99,39 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
       messages: [{ role: 'user', content: query }]
     });
 
+    let usedSearch = false;
+    let currentBlockIndex = -1;
+    let firstTextBlock = -1;
+    let buffer = '';
+
     for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        currentBlockIndex++;
+        if (event.content_block?.type === 'text' && firstTextBlock === -1) {
+          firstTextBlock = currentBlockIndex;
+        }
+        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
+          usedSearch = true;
+        }
+      }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        // If search was used and this is the first text block, it's narration — skip it
+        if (usedSearch && currentBlockIndex === firstTextBlock) {
+          continue;
+        }
+        // If search hasn't been used yet and this is the first block, buffer it
+        // in case search comes later
+        if (!usedSearch && currentBlockIndex === firstTextBlock) {
+          buffer += event.delta.text;
+          continue;
+        }
         res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
       }
+    }
+
+    // If we buffered text and no search was used, flush the buffer
+    if (buffer && !usedSearch) {
+      res.write(`data: ${JSON.stringify({ type: 'text', content: buffer })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
@@ -138,10 +167,33 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
       messages
     });
 
+    let usedSearch = false;
+    let currentBlockIndex = -1;
+    let firstTextBlock = -1;
+    let buffer = '';
+
     for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        currentBlockIndex++;
+        if (event.content_block?.type === 'text' && firstTextBlock === -1) {
+          firstTextBlock = currentBlockIndex;
+        }
+        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
+          usedSearch = true;
+        }
+      }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        if (usedSearch && currentBlockIndex === firstTextBlock) continue;
+        if (!usedSearch && currentBlockIndex === firstTextBlock) {
+          buffer += event.delta.text;
+          continue;
+        }
         res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
       }
+    }
+
+    if (buffer && !usedSearch) {
+      res.write(`data: ${JSON.stringify({ type: 'text', content: buffer })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
