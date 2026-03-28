@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab — Yogoose</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #ffffff; --text: #1a1a1a; --text-secondary: #5f6368;
+      --border: #dfe1e5; --surface: #ffffff; --surface-hover: #f8f9fa;
+      --shadow-hover: 0 2px 12px rgba(32,33,36,0.18);
+      --ai-accent: #7c5cfc; --navigate-accent: #34a853; --accent: #4a90d9;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e0e; --text: #e8eaed; --text-secondary: #9aa0a6;
+        --border: #3c4043; --surface: #1e1e1e; --surface-hover: #2a2a2a;
+        --shadow-hover: 0 2px 12px rgba(0,0,0,0.4);
+      }
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .logo { font-size: 56px; font-weight: 700; letter-spacing: -2px; margin-bottom: 28px; user-select: none; }
+    .logo-yo { color: var(--ai-accent); }
+    .logo-go { color: var(--navigate-accent); }
+    .logo-ose { color: var(--accent); }
+    .search-container { width: 100%; max-width: 560px; position: relative; padding: 0 20px; }
+    .search-bar {
+      width: 100%; height: 48px; padding: 0 48px 0 20px; font-size: 16px;
+      font-family: var(--font); color: var(--text); background: var(--surface);
+      border: 1px solid var(--border); border-radius: 24px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-bar:focus, .search-bar:hover { border-color: transparent; box-shadow: var(--shadow-hover); }
+    .search-bar::placeholder { color: var(--text-secondary); }
+    .search-icon {
+      position: absolute; right: 36px; top: 50%; transform: translateY(-50%);
+      width: 20px; height: 20px; color: var(--text-secondary); pointer-events: none;
+    }
+    .autocomplete {
+      position: absolute; top: 100%; left: 20px; right: 20px;
+      background: var(--surface); border: 1px solid var(--border); border-top: none;
+      border-radius: 0 0 16px 16px; box-shadow: var(--shadow-hover);
+      z-index: 100; display: none; overflow: hidden;
+    }
+    .autocomplete.active { display: block; }
+    .ac-open .search-bar { border-radius: 24px 24px 0 0; border-bottom-color: transparent; }
+    .autocomplete-item {
+      display: flex; align-items: center; padding: 10px 20px; cursor: pointer; gap: 12px;
+    }
+    .autocomplete-item:hover, .autocomplete-item.selected { background: var(--surface-hover); }
+    .autocomplete-icon { width: 18px; font-size: 14px; flex-shrink: 0; text-align: center; }
+    .autocomplete-icon.navigate { color: var(--navigate-accent); }
+    .autocomplete-icon.ai { color: var(--ai-accent); }
+    .autocomplete-text { font-size: 15px; color: var(--text); flex-grow: 1; }
+    .autocomplete-type { font-size: 12px; color: var(--text-secondary); }
+    .hint { margin-top: 20px; font-size: 13px; color: var(--text-secondary); }
+    .hint kbd { background: var(--surface-hover); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="logo"><span class="logo-yo">Yo</span><span class="logo-go">Go</span><span class="logo-ose">ose</span></div>
+  <div class="search-container" id="searchContainer">
+    <input type="text" class="search-bar" id="searchInput" placeholder="Search the web or ask anything..." autocomplete="off" autofocus>
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <div class="autocomplete" id="autocomplete"></div>
+  </div>
+  <p class="hint">Or type <kbd>yg</kbd> in the address bar to search Yogoose directly</p>
+  <script src="newtab.js"></script>
+</body>
+</html>

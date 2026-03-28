@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup — Yogoose</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #ffffff; --text: #1a1a1a; --text-secondary: #5f6368;
+      --border: #dfe1e5; --surface-hover: #f8f9fa;
+      --ai-accent: #7c5cfc; --navigate-accent: #34a853; --accent: #4a90d9;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e0e0e; --text: #e8eaed; --text-secondary: #9aa0a6;
+        --border: #3c4043; --surface-hover: #2a2a2a;
+      }
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    .setup {
+      max-width: 520px; text-align: center; padding: 40px 20px;
+    }
+    .logo { font-size: 48px; font-weight: 700; letter-spacing: -2px; margin-bottom: 12px; }
+    .logo-yo { color: var(--ai-accent); }
+    .logo-go { color: var(--navigate-accent); }
+    .logo-ose { color: var(--accent); }
+    .check { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    .sub { font-size: 16px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 32px; }
+    .steps { text-align: left; margin: 0 auto 32px; max-width: 400px; }
+    .step {
+      display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px;
+    }
+    .step-num {
+      width: 28px; height: 28px; background: var(--ai-accent); color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .step p { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
+    .step strong { color: var(--text); }
+    .url-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface-hover); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; margin: 12px 0;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+      word-break: break-all;
+    }
+    .url-box code { flex-grow: 1; background: none; }
+    .copy-btn {
+      padding: 5px 12px; font-size: 12px; font-weight: 500; font-family: var(--font);
+      color: #fff; background: var(--ai-accent); border: none; border-radius: 5px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .copy-btn:hover { background: #6a4ce0; }
+    .main-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; font-size: 16px; font-weight: 600; font-family: var(--font);
+      color: #fff; background: var(--ai-accent); border: none; border-radius: 24px;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+    }
+    .main-btn:hover { background: #6a4ce0; transform: translateY(-1px); }
+    .done { margin-top: 24px; font-size: 14px; color: var(--text-secondary); }
+    .done a { color: var(--accent); text-decoration: none; }
+    .done a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="setup">
+    <div class="logo"><span class="logo-yo">Yo</span><span class="logo-go">Go</span><span class="logo-ose">ose</span></div>
+    <div class="check">&#10003;</div>
+    <h1>Extension installed!</h1>
+    <p class="sub">One last step — make Yogoose your default search engine so every address bar search goes through Yogoose.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <p>Click the button below to open <strong>Chrome Search Settings</strong></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <p>Scroll to <strong>"Site search"</strong> and click <strong>Add</strong></p>
+          <p>Name: <strong>Yogoose</strong> &nbsp; Shortcut: <strong>yogoose.com</strong></p>
+          <p>URL:</p>
+          <div class="url-box">
+            <code>https://yogoose.com/results.html?q=%s</code>
+            <button class="copy-btn" id="copyBtn">Copy</button>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <p>Click the <strong>three dots</strong> (...) next to Yogoose and select <strong>"Make default"</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <button class="main-btn" id="openSettings">
+      Open Search Settings
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+
+    <p class="done">Already done? <a href="https://yogoose.com">Start searching with Yogoose</a></p>
+  </div>
+
+  <script>
+    document.getElementById('openSettings').addEventListener('click', () => {
+      chrome.tabs.create({ url: 'chrome://settings/search' });
+    });
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText('https://yogoose.com/results.html?q=%s').then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
+    });
+  </script>
+</body>
+</html>
