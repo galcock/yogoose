@@ -115,15 +115,31 @@
     }
     .chrome-btn:hover { background: #6a4ce0; transform: translateY(-1px); }
     .center { text-align: center; }
-    .note {
-      margin-top: 40px;
-      padding: 16px;
-      background: var(--ai-bg);
-      border-radius: 8px;
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.6;
+    .hint { font-size: 12px; color: var(--text-secondary); }
+    .hint code { background: var(--surface-hover); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .wizard-step { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .next-btn {
+      display: block; width: 100%; margin-top: 24px; padding: 14px; font-size: 15px;
+      font-weight: 600; font-family: var(--font); color: #fff; background: var(--navigate-accent);
+      border: none; border-radius: 12px; cursor: pointer; transition: background 0.15s;
     }
+    .next-btn:hover { background: #2d9348; }
+    .fields-guide { margin: 16px 0; }
+    .field-row {
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+      background: var(--surface-hover); border-radius: 8px; margin-bottom: 8px;
+    }
+    .field-label { font-weight: 600; font-size: 14px; width: 70px; flex-shrink: 0; }
+    .field-value { font-family: 'SF Mono', monospace; font-size: 13px; flex-grow: 1; word-break: break-all; }
+    .copy-small {
+      padding: 4px 10px; font-size: 11px; font-family: var(--font); font-weight: 500;
+      color: #fff; background: var(--ai-accent); border: none; border-radius: 4px; cursor: pointer; flex-shrink: 0;
+    }
+    .copy-small:hover { background: #6a4ce0; }
+    .setup-complete { text-align: center; padding: 40px 0; }
+    .setup-complete h2 { font-size: 24px; margin-bottom: 8px; }
+    .setup-complete p { font-size: 15px; color: var(--text-secondary); }
   </style>
 </head>
 <body>
@@ -135,38 +151,72 @@
     <h1>Use YoGoose in Your URL Bar</h1>
     <p class="subtitle">Replace Google in your address bar. Every search — whether you want a website or an AI answer — goes through Yogoose.</p>
 
-    <div class="step">
-      <div class="step-number">1</div>
-      <div class="step-content">
-        <h3>Open Chrome search settings</h3>
-        <p>Go to <strong>Settings</strong> &rarr; <strong>Search engine</strong> &rarr; <strong>Manage search engines and site search</strong></p>
+    <div class="setup-wizard" id="wizard">
+      <div class="wizard-step" id="step1">
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h3>Open your search engine settings</h3>
+            <p>Click the button below — it'll take you right there.</p>
+          </div>
+        </div>
+        <div class="center">
+          <a href="chrome://settings/searchEngines" class="chrome-btn" id="openSettingsBtn">
+            Open Search Settings
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <p class="hint" style="margin-top:12px;">If the button doesn't work, copy this into your address bar: <code>chrome://settings/searchEngines</code></p>
+        </div>
+        <button class="next-btn" id="next1">I'm there, next step &rarr;</button>
       </div>
-    </div>
 
-    <div class="step">
-      <div class="step-number">2</div>
-      <div class="step-content">
-        <h3>Add Yogoose as a search engine</h3>
-        <p>Click <strong>Add</strong> under "Site search" and enter:</p>
-        <p><strong>Name:</strong> Yogoose<br><strong>Shortcut:</strong> yogoose.com<br><strong>URL:</strong></p>
+      <div class="wizard-step" id="step2" style="display:none;">
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h3>Click "Add" under Site Search</h3>
+            <p>Scroll down to <strong>"Site search"</strong> and click the <strong>Add</strong> button. Then fill in:</p>
+          </div>
+        </div>
+        <div class="fields-guide">
+          <div class="field-row">
+            <span class="field-label">Name:</span>
+            <span class="field-value" id="nameField">Yogoose</span>
+            <button class="copy-small" data-copy="Yogoose">Copy</button>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Shortcut:</span>
+            <span class="field-value" id="shortcutField">yogoose.com</span>
+            <button class="copy-small" data-copy="yogoose.com">Copy</button>
+          </div>
+          <div class="field-row">
+            <span class="field-label">URL:</span>
+            <span class="field-value" id="urlField">https://yogoose.com/results.html?q=%s</span>
+            <button class="copy-small" data-copy="https://yogoose.com/results.html?q=%s">Copy</button>
+          </div>
+        </div>
+        <button class="next-btn" id="next2">Done, next step &rarr;</button>
       </div>
-    </div>
 
-    <div class="url-box">
-      <code id="searchUrl">https://yogoose.com/results.html?q=%s</code>
-      <button class="copy-btn" id="copyBtn">Copy</button>
-    </div>
-
-    <div class="step">
-      <div class="step-number">3</div>
-      <div class="step-content">
-        <h3>Set as default</h3>
-        <p>Click the <strong>three dots</strong> next to Yogoose and select <strong>Make default</strong>. Done.</p>
+      <div class="wizard-step" id="step3" style="display:none;">
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h3>Make it your default</h3>
+            <p>Find <strong>Yogoose</strong> in the list, click the <strong>three dots</strong> (&hellip;) next to it, and select <strong>"Make default"</strong>.</p>
+          </div>
+        </div>
+        <button class="next-btn" id="next3">Done! &check;</button>
       </div>
-    </div>
 
-    <div class="note">
-      <strong>That's it.</strong> Every time you type in your address bar, Yogoose will instantly know whether to take you to a website or give you an AI answer. No more switching between Google and ChatGPT.
+      <div class="wizard-step" id="stepDone" style="display:none;">
+        <div class="setup-complete">
+          <div style="font-size:48px;margin-bottom:16px;">&#10003;</div>
+          <h2>You're all set!</h2>
+          <p>Now just type anything in your address bar — Yogoose will take it from here.</p>
+          <p style="margin-top:8px;color:var(--text-secondary);">Try typing <strong>"weather"</strong> or <strong>"youtube"</strong> to see the magic.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -177,11 +227,28 @@
   </footer>
 
   <script>
-    document.getElementById('copyBtn').addEventListener('click', () => {
-      navigator.clipboard.writeText('https://yogoose.com/results.html?q=%s').then(() => {
-        const btn = document.getElementById('copyBtn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    // Wizard navigation
+    document.getElementById('next1').addEventListener('click', () => {
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('step2').style.display = 'block';
+    });
+    document.getElementById('next2').addEventListener('click', () => {
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step3').style.display = 'block';
+    });
+    document.getElementById('next3').addEventListener('click', () => {
+      document.getElementById('step3').style.display = 'none';
+      document.getElementById('stepDone').style.display = 'block';
+    });
+
+    // Copy buttons
+    document.querySelectorAll('.copy-small').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
       });
     });
   </script>

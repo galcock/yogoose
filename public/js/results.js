@@ -424,19 +424,19 @@
   function getFinancialChart(q) {
     const lower = q.toLowerCase();
     const MARKET_KEYWORDS = {
-      'djia': 'DJI', 'dow': 'DJI', 'dow jones': 'DJI',
-      'sp500': 'SPX', 's&p': 'SPX', 's&p 500': 'SPX', 'sp 500': 'SPX',
-      'nasdaq': 'IXIC', 'nasdaq composite': 'IXIC',
-      'markets': 'SPX', 'market': 'SPX', 'stock market': 'SPX',
-      'bitcoin': 'BTCUSD', 'btc': 'BTCUSD',
-      'ethereum': 'ETHUSD', 'eth': 'ETHUSD',
-      'apple stock': 'AAPL', 'aapl': 'AAPL',
-      'tesla stock': 'TSLA', 'tsla': 'TSLA',
-      'nvidia stock': 'NVDA', 'nvda': 'NVDA',
-      'google stock': 'GOOGL', 'googl': 'GOOGL',
-      'amazon stock': 'AMZN', 'amzn': 'AMZN',
-      'meta stock': 'META',
-      'microsoft stock': 'MSFT', 'msft': 'MSFT',
+      'djia': 'TVC:DJI', 'dow': 'TVC:DJI', 'dow jones': 'TVC:DJI',
+      'sp500': 'FOREXCOM:SPXUSD', 's&p': 'FOREXCOM:SPXUSD', 's&p 500': 'FOREXCOM:SPXUSD', 'sp 500': 'FOREXCOM:SPXUSD',
+      'nasdaq': 'NASDAQ:NDX', 'nasdaq composite': 'TVC:IXIC',
+      'markets': 'FOREXCOM:SPXUSD', 'market': 'FOREXCOM:SPXUSD', 'stock market': 'FOREXCOM:SPXUSD',
+      'bitcoin': 'BITSTAMP:BTCUSD', 'btc': 'BITSTAMP:BTCUSD',
+      'ethereum': 'BITSTAMP:ETHUSD', 'eth': 'BITSTAMP:ETHUSD',
+      'apple stock': 'NASDAQ:AAPL', 'aapl': 'NASDAQ:AAPL',
+      'tesla stock': 'NASDAQ:TSLA', 'tsla': 'NASDAQ:TSLA',
+      'nvidia stock': 'NASDAQ:NVDA', 'nvda': 'NASDAQ:NVDA',
+      'google stock': 'NASDAQ:GOOGL', 'googl': 'NASDAQ:GOOGL',
+      'amazon stock': 'NASDAQ:AMZN', 'amzn': 'NASDAQ:AMZN',
+      'meta stock': 'NASDAQ:META', 'meta': 'NASDAQ:META',
+      'microsoft stock': 'NASDAQ:MSFT', 'msft': 'NASDAQ:MSFT',
     };
 
     let symbol = null;
