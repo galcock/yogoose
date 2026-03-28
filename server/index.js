@@ -169,7 +169,11 @@ app.get('/api/ambient', async (req, res) => {
 6. Entertainment/movies in theaters
 7. Local events this weekend
 8. Stock market if notable move
-Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "Dodgers vs DBacks at 7:10 PM PT"]` }]
+Also include 2-3 major NON-local items like:
+- Big national/global sports events (F1 race, UFC, March Madness, World Cup, etc.)
+- Major movie releases this weekend
+- Biggest national news story
+Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "F1 Japanese Grand Prix Sunday 10 PM PT"]` }]
     });
 
     // Extract JSON from the response
