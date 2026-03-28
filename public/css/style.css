@@ -416,6 +416,18 @@ body {
   to { opacity: 1; transform: translateY(-4px); }
 }
 
+/* === FINANCIAL CHART === */
+.financial-chart {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.financial-chart .tradingview-widget-container {
+  width: 100%;
+}
+
 /* === RELATED SITES === */
 .related-sites {
   margin-top: 28px;

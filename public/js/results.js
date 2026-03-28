@@ -108,10 +108,15 @@
                 goose.classList.add('goose-fade-out');
                 setTimeout(() => {
                   responseArea.innerHTML = '';
+                  // Insert financial chart if this is a market query
+                  const chart = getFinancialChart(currentSearchQuery);
+                  if (chart) responseArea.appendChild(chart);
                   responseArea.appendChild(aiDiv);
-                }, 400); // Wait for fade animation
+                }, 400);
               } else {
                 responseArea.innerHTML = '';
+                const chart = getFinancialChart(currentSearchQuery);
+                if (chart) responseArea.appendChild(chart);
                 responseArea.appendChild(aiDiv);
               }
             }
@@ -413,6 +418,83 @@
   });
 
   // --- Utility ---
+
+  // --- Financial charts ---
+
+  function getFinancialChart(q) {
+    const lower = q.toLowerCase();
+    const MARKET_KEYWORDS = {
+      'djia': 'DJI', 'dow': 'DJI', 'dow jones': 'DJI',
+      'sp500': 'SPX', 's&p': 'SPX', 's&p 500': 'SPX', 'sp 500': 'SPX',
+      'nasdaq': 'IXIC', 'nasdaq composite': 'IXIC',
+      'markets': 'SPX', 'market': 'SPX', 'stock market': 'SPX',
+      'bitcoin': 'BTCUSD', 'btc': 'BTCUSD',
+      'ethereum': 'ETHUSD', 'eth': 'ETHUSD',
+      'apple stock': 'AAPL', 'aapl': 'AAPL',
+      'tesla stock': 'TSLA', 'tsla': 'TSLA',
+      'nvidia stock': 'NVDA', 'nvda': 'NVDA',
+      'google stock': 'GOOGL', 'googl': 'GOOGL',
+      'amazon stock': 'AMZN', 'amzn': 'AMZN',
+      'meta stock': 'META',
+      'microsoft stock': 'MSFT', 'msft': 'MSFT',
+    };
+
+    let symbol = null;
+    // Check longest matches first
+    const sorted = Object.entries(MARKET_KEYWORDS).sort((a, b) => b[0].length - a[0].length);
+    for (const [keyword, sym] of sorted) {
+      if (lower.includes(keyword)) {
+        symbol = sym;
+        break;
+      }
+    }
+
+    if (!symbol) return null;
+
+    const container = document.createElement('div');
+    container.className = 'financial-chart';
+    container.innerHTML = `
+      <div class="tradingview-widget-container">
+        <div id="tradingview-chart"></div>
+      </div>
+    `;
+
+    // Load TradingView widget after DOM insert
+    setTimeout(() => {
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+      script.async = true;
+      script.textContent = JSON.stringify({
+        symbols: [[symbol]],
+        chartOnly: false,
+        width: '100%',
+        height: 300,
+        locale: 'en',
+        colorTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+        autosize: true,
+        showVolume: false,
+        showMA: false,
+        hideDateRanges: false,
+        hideMarketStatus: false,
+        hideSymbolLogo: false,
+        scalePosition: 'right',
+        scaleMode: 'Normal',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+        fontSize: '10',
+        noTimeScale: false,
+        valuesTracking: '1',
+        changeMode: 'price-and-percent',
+        chartType: 'area',
+        lineWidth: 2,
+        lineType: 0,
+        dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M']
+      });
+      const target = container.querySelector('.tradingview-widget-container');
+      if (target) target.appendChild(script);
+    }, 100);
+
+    return container;
+  }
 
   function escapeHtml(str) {
     const div = document.createElement('div');
