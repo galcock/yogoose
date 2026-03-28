@@ -73,13 +73,13 @@
   async function streamAIResponse(res) {
     const aiDiv = document.createElement('div');
     aiDiv.className = 'ai-response';
-    responseArea.innerHTML = '';
-    responseArea.appendChild(aiDiv);
+    // DON'T clear the goose yet — wait for first token
 
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
 
     let fullText = '';
+    let firstToken = true;
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -100,10 +100,24 @@
         try {
           const event = JSON.parse(jsonStr);
           if (event.type === 'text') {
+            // On first token: fade out goose, then replace with AI response
+            if (firstToken) {
+              firstToken = false;
+              const goose = responseArea.querySelector('.goose-loading');
+              if (goose) {
+                goose.classList.add('goose-fade-out');
+                setTimeout(() => {
+                  responseArea.innerHTML = '';
+                  responseArea.appendChild(aiDiv);
+                }, 400); // Wait for fade animation
+              } else {
+                responseArea.innerHTML = '';
+                responseArea.appendChild(aiDiv);
+              }
+            }
             fullText += event.content;
             aiDiv.innerHTML = renderMarkdown(fullText);
             aiDiv.appendChild(cursor);
-            // Auto-scroll to bottom if needed
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
           } else if (event.type === 'done') {
             cursor.remove();
