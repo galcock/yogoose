@@ -187,8 +187,42 @@ function detectIntent(query) {
     return { type: 'navigate', url, name: normalized, confidence: 0.95 };
   }
 
+  // Common English words that should NOT fuzzy/prefix match to sites
+  const GENERIC_WORDS = new Set([
+    'cooking', 'booking', 'looking', 'working', 'talking', 'walking', 'making', 'taking',
+    'going', 'being', 'doing', 'having', 'getting', 'saying', 'thinking', 'feeling',
+    'running', 'coming', 'playing', 'reading', 'writing', 'eating', 'sleeping', 'buying',
+    'selling', 'living', 'dying', 'giving', 'finding', 'telling', 'asking', 'trying',
+    'using', 'calling', 'moving', 'leaving', 'turning', 'starting', 'showing', 'hearing',
+    'growing', 'keeping', 'setting', 'putting', 'standing', 'losing', 'paying', 'meeting',
+    'sitting', 'speaking', 'rising', 'opening', 'closing', 'holding', 'learning',
+    'weather', 'water', 'world', 'place', 'house', 'money', 'phone', 'paper',
+    'power', 'light', 'night', 'story', 'point', 'woman', 'child', 'thing', 'party',
+    'state', 'school', 'heart', 'human', 'young', 'small', 'large', 'great', 'right',
+    'still', 'every', 'after', 'other', 'never', 'again', 'under', 'often', 'early',
+    'later', 'three', 'seven', 'eight', 'black', 'white', 'green', 'space', 'short',
+    'price', 'order', 'store', 'stock', 'trade', 'board', 'class', 'court', 'round',
+    'watch', 'drive', 'stand', 'break', 'clear', 'plant', 'cover', 'table', 'blood',
+    'sports', 'games', 'movies', 'books', 'travel', 'health', 'finance', 'music',
+    'photos', 'video', 'design', 'nature', 'animal', 'garden', 'market', 'search',
+    'social', 'media', 'email', 'cloud', 'mobile', 'dating', 'style', 'beauty',
+    'drink', 'hotel', 'legal', 'taxes', 'loans', 'cards', 'paint', 'floor',
+    'dream', 'sleep', 'brain', 'teeth', 'mouth', 'smile', 'happy', 'angry',
+    'funny', 'scary', 'clean', 'cheap', 'fresh', 'quick', 'smart', 'sound',
+    'color', 'shape', 'print', 'track', 'train', 'truck', 'build', 'craft',
+    'hunting', 'fishing', 'hiking', 'skiing', 'surfing', 'camping', 'climbing',
+    'racing', 'boxing', 'diving', 'flying', 'riding', 'sailing', 'rowing',
+    'singing', 'dancing', 'painting', 'drawing', 'typing', 'coding',
+    'science', 'physics', 'biology', 'english', 'french', 'german', 'spanish',
+    'history', 'culture', 'energy', 'change', 'growth', 'trust', 'value',
+    'testing', 'review', 'update', 'report', 'status', 'guide', 'advice',
+    'recipe', 'dinner', 'lunch', 'snack', 'pizza', 'chicken', 'steak',
+    'coffee', 'juice', 'cream', 'sugar', 'bread', 'fruit', 'salad'
+  ]);
+
   // 6. Prefix match via trie (for partial site names like "rotten" -> rottentomatoes)
-  if (words.length <= 2) {
+  // Skip for single generic words
+  if (words.length <= 2 && !(words.length === 1 && GENERIC_WORDS.has(normalized))) {
     const searchKey = normalized.replace(/[^a-z0-9]/g, '');
     if (searchKey.length >= 3) {
       const trieResults = trie.search(searchKey);
@@ -208,24 +242,7 @@ function detectIntent(query) {
   // 7. Fuzzy match for single-word queries (typo correction)
   // Only triggers when: first letter matches, not a common English word, distance is small
   if (words.length === 1 && normalized.length >= 3) {
-    const COMMON_WORDS = new Set([
-      'cooking', 'booking', 'looking', 'working', 'talking', 'walking', 'making', 'taking',
-      'going', 'being', 'doing', 'having', 'getting', 'saying', 'thinking', 'feeling',
-      'running', 'coming', 'playing', 'reading', 'writing', 'eating', 'sleeping', 'buying',
-      'selling', 'living', 'dying', 'giving', 'finding', 'telling', 'asking', 'trying',
-      'using', 'calling', 'moving', 'leaving', 'turning', 'starting', 'showing', 'hearing',
-      'growing', 'keeping', 'setting', 'putting', 'standing', 'losing', 'paying', 'meeting',
-      'sitting', 'speaking', 'rising', 'opening', 'closing', 'holding', 'learning',
-      'weather', 'water', 'world', 'place', 'house', 'money', 'music', 'phone', 'paper',
-      'power', 'light', 'night', 'story', 'point', 'woman', 'child', 'thing', 'party',
-      'state', 'school', 'heart', 'human', 'young', 'small', 'large', 'great', 'right',
-      'still', 'every', 'after', 'other', 'never', 'again', 'under', 'often', 'early',
-      'later', 'three', 'seven', 'eight', 'black', 'white', 'green', 'space', 'short',
-      'price', 'order', 'store', 'stock', 'trade', 'board', 'class', 'court', 'round',
-      'watch', 'drive', 'stand', 'break', 'clear', 'plant', 'cover', 'table', 'blood'
-    ]);
-
-    if (!COMMON_WORDS.has(normalized)) {
+    if (!GENERIC_WORDS.has(normalized)) {
       let bestMatch = null;
       let bestDist = Infinity;
       const maxDist = normalized.length <= 4 ? 1 : 2;
@@ -556,6 +573,26 @@ const TOPIC_SITES = {
     { name: 'Instructables', url: 'https://instructables.com' },
     { name: 'Home Depot', url: 'https://homedepot.com' },
     { name: 'YouTube', url: 'https://youtube.com' }
+  ],
+  outdoors: [
+    { name: 'AllTrails', url: 'https://alltrails.com' },
+    { name: 'REI', url: 'https://rei.com' },
+    { name: 'Outside Magazine', url: 'https://outsideonline.com' }
+  ],
+  fishing: [
+    { name: 'Bass Pro Shops', url: 'https://basspro.com' },
+    { name: 'FishingBooker', url: 'https://fishingbooker.com' },
+    { name: 'Field & Stream', url: 'https://fieldandstream.com' }
+  ],
+  hunting: [
+    { name: 'Cabela\'s', url: 'https://cabelas.com' },
+    { name: 'Bass Pro Shops', url: 'https://basspro.com' },
+    { name: 'Field & Stream', url: 'https://fieldandstream.com' }
+  ],
+  gardening: [
+    { name: 'The Spruce', url: 'https://thespruce.com' },
+    { name: 'Gardening Know How', url: 'https://gardeningknowhow.com' },
+    { name: 'Home Depot', url: 'https://homedepot.com' }
   ]
 };
 
@@ -605,7 +642,11 @@ const TOPIC_KEYWORDS = {
   environment: ['environment', 'climate change', 'global warming', 'pollution', 'renewable', 'solar', 'sustainability', 'carbon', 'emission', 'recycle', 'ecosystem', 'biodiversity', 'endangered'],
   pets: ['pet', 'dog', 'cat', 'puppy', 'kitten', 'breed', 'vet', 'veterinar', 'grooming', 'adoption', 'shelter', 'leash', 'kibble'],
   books: ['book', 'novel', 'author', 'reading', 'fiction', 'nonfiction', 'literary', 'bestseller', 'chapter', 'publisher', 'genre', 'memoir', 'biography'],
-  diy: ['diy', 'how to build', 'how to fix', 'repair', 'install', 'assemble', 'craft', 'woodwork', 'plumbing', 'electric', 'renovation', 'project', 'tool']
+  diy: ['diy', 'how to build', 'how to fix', 'repair', 'install', 'assemble', 'craft', 'woodwork', 'plumbing', 'electric', 'renovation', 'project', 'tool'],
+  outdoors: ['outdoor', 'hiking', 'camping', 'backpacking', 'trail', 'mountain', 'climbing', 'kayaking', 'canoeing', 'surfing', 'skiing', 'snowboarding', 'rock climbing', 'national park'],
+  fishing: ['fishing', 'fish', 'bass', 'trout', 'salmon', 'angling', 'tackle', 'lure', 'bait', 'fly fishing', 'deep sea'],
+  hunting: ['hunting', 'hunt', 'deer', 'elk', 'duck hunting', 'archery', 'bow hunting', 'rifle', 'shotgun', 'game bird', 'pheasant'],
+  gardening: ['gardening', 'garden', 'plant', 'flower', 'seed', 'soil', 'compost', 'fertilizer', 'pruning', 'landscaping', 'lawn', 'vegetable garden', 'herb garden']
 };
 
 // Default fallback sites for when nothing matches
