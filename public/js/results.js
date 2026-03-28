@@ -22,28 +22,43 @@
   // --- Search execution ---
 
   async function executeSearch(q) {
-    loading.style.display = 'flex';
-    responseArea.innerHTML = '';
-    responseArea.appendChild(loading);
+    // Show dancing goose while working
+    responseArea.innerHTML = `
+      <div class="goose-loading">
+        <svg class="dancing-goose" width="80" height="100" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="60" cy="88" rx="28" ry="22" fill="white"/>
+          <path d="M52 72 C48 50, 38 38, 42 28" stroke="white" stroke-width="12" stroke-linecap="round" fill="none"/>
+          <circle cx="40" cy="26" r="12" fill="white"/>
+          <circle cx="36" cy="24" r="2.5" fill="#1a1a1a"/>
+          <path d="M28 28 L18 26 L28 32 Z" fill="#f59e0b"/>
+          <path d="M68 78 C78 68, 88 72, 85 85 C82 95, 72 92, 68 88" fill="#e8eaed"/>
+          <path d="M50 108 L42 120 M50 108 L50 120 M50 108 L58 120" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+          <path d="M70 108 L62 120 M70 108 L70 120 M70 108 L78 120" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+          <path d="M32 30 Q28 32, 30 34" stroke="#1a1a1a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <p class="goose-loading-text">Goose is on it...</p>
+      </div>
+    `;
     poweredBy.style.display = 'none';
+    relatedSites.style.display = 'none';
+
+    // Fire related sites fetch in parallel — don't wait for AI
+    fetchRelatedSites(q);
 
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
       const contentType = res.headers.get('content-type') || '';
 
       if (contentType.includes('text/event-stream')) {
-        // AI streaming response
         streamAIResponse(res);
       } else {
         const data = await res.json();
         if (data.type === 'navigate') {
-          // Redirect immediately
           window.location.href = data.url;
           return;
         }
       }
     } catch (err) {
-      loading.style.display = 'none';
       responseArea.innerHTML = '<div class="ai-response"><p>Something went wrong. Please try again.</p></div>';
     }
   }
@@ -51,8 +66,6 @@
   // --- SSE streaming ---
 
   async function streamAIResponse(res) {
-    loading.style.display = 'none';
-
     const aiDiv = document.createElement('div');
     aiDiv.className = 'ai-response';
     responseArea.innerHTML = '';
@@ -105,8 +118,6 @@
     aiDiv.innerHTML = renderMarkdown(fullText);
     poweredBy.style.display = 'block';
 
-    // Fetch related sites
-    fetchRelatedSites(query);
   }
 
   // --- Related sites ---
