@@ -37,13 +37,11 @@ Your responses should be:
 - Factual and helpful
 - Brief for simple questions (1-3 sentences), detailed only when the question demands it
 
-For sports queries, use this exact format:
-"The Lakers play tonight (Friday, March 27) at 7:30 PM ${tzAbbr} against the Brooklyn Nets at Crypto.com Arena. You can watch it on ESPN, NBA League Pass, and Spectrum SportsNet."
-Key rules:
-- Always include the day of week and date in parentheses after "tonight"/"today"
-- Always include the venue
-- Always list where to watch as a natural sentence with "You can watch it on..."
-- Include team records if available
+For sports queries:
+- For SCORES: ALWAYS lead with the final score in format "Lakers 112, Nets 98" or "The Lakers beat the Nets 112-98". Include the date of the game, key stats, and next game info.
+- For UPCOMING GAMES: Include the day/date, time in ${tzAbbr}, venue, where to watch, and team records
+- For GENERAL team queries: Include current record, standings position, recent results, and next game
+- Always be specific with numbers — scores, records, stats
 
 You have access to a web_search tool. USE IT AGGRESSIVELY. Search first, answer second. Specifically:
 - ALWAYS search if you're not 100% certain of the answer
@@ -63,6 +61,8 @@ Do NOT:
 - NEVER say you don't have access to real-time information
 - NEVER say you're not familiar with something — SEARCH FOR IT INSTEAD
 - NEVER ask the user for more context before trying to answer — search first, then answer with what you find
+- NEVER end your response with a question like "Would you like more details?" or "Are you looking for..."
+- NEVER ask follow-up questions — just give the complete answer
 - Show times in UTC or any timezone other than the user's local timezone
 
 For sports queries specifically, include ALL of this:
@@ -108,13 +108,19 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
     let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
 
     if (hasSearch) {
-      // When search was used, take only the LAST text block (the actual answer)
-      const textBlocks = response.content.filter(b => b.type === 'text');
-      if (textBlocks.length > 0) {
-        finalText = textBlocks[textBlocks.length - 1].text;
-      }
+      // When search was used, find the last search tool block index
+      // and take all text blocks AFTER it (skip pre-search narration)
+      let lastSearchIdx = -1;
+      response.content.forEach((b, i) => {
+        if (b.type === 'server_tool_use' || b.type === 'tool_use' || b.type === 'server_tool_result' || b.type === 'tool_result') {
+          lastSearchIdx = i;
+        }
+      });
+      finalText = response.content
+        .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
+        .map(b => b.text)
+        .join('\n\n');
     } else {
-      // No search — concatenate all text blocks
       finalText = response.content
         .filter(b => b.type === 'text')
         .map(b => b.text)
@@ -167,10 +173,16 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
     let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
 
     if (hasSearch) {
-      const textBlocks = response.content.filter(b => b.type === 'text');
-      if (textBlocks.length > 0) {
-        finalText = textBlocks[textBlocks.length - 1].text;
-      }
+      let lastSearchIdx = -1;
+      response.content.forEach((b, i) => {
+        if (b.type === 'server_tool_use' || b.type === 'tool_use' || b.type === 'server_tool_result' || b.type === 'tool_result') {
+          lastSearchIdx = i;
+        }
+      });
+      finalText = response.content
+        .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
+        .map(b => b.text)
+        .join('\n\n');
     } else {
       finalText = response.content
         .filter(b => b.type === 'text')
