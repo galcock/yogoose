@@ -639,7 +639,7 @@
 
       for (const [name, url] of entries) {
         if (linked.has(name)) continue;
-        if (name.length < 4) continue; // Skip very short names
+        if (name.length < 3) continue; // Allow 3-char names (TBS, CBS, NBC, etc.)
 
         // Case-insensitive search but preserve original case
         const idx = text.toLowerCase().indexOf(name.toLowerCase());

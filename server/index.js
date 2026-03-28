@@ -127,6 +127,26 @@ app.get('/api/linkmap', (req, res) => {
     'Zillow': 'https://zillow.com',
     'Fidelity': 'https://fidelity.com',
     'Vanguard': 'https://vanguard.com',
+    // Sports networks & streaming
+    'truTV': 'https://trutv.com',
+    'March Madness': 'https://www.ncaa.com/march-madness',
+    'March Madness Live': 'https://www.ncaa.com/march-madness-live',
+    'Final Four': 'https://www.ncaa.com/final-four',
+    'NCAA': 'https://ncaa.com',
+    'Lucas Oil Stadium': 'https://www.lucasoilstadium.com',
+    // College teams
+    'Duke': 'https://goduke.com',
+    'UConn': 'https://uconnhuskies.com',
+    'Arizona': 'https://arizonawildcats.com',
+    'Purdue': 'https://purduesports.com',
+    'Iowa': 'https://hawkeyesports.com',
+    'Illinois': 'https://fightingillini.com',
+    'Michigan': 'https://mgoblue.com',
+    'Alabama': 'https://rolltide.com',
+    'Tennessee': 'https://utsports.com',
+    'Michigan State': 'https://msuspartans.com',
+    'Iowa State': 'https://cyclones.com',
+    "St. John's": 'https://redstormsports.com',
   });
   res.json(map);
 });
