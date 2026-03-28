@@ -107,32 +107,48 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
     let finalText = '';
     let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
 
+    // Get all text blocks
+    const allText = response.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n\n');
+
     if (hasSearch) {
-      // When search was used, find the last search tool block index
-      // and take all text blocks AFTER it (skip pre-search narration)
+      // Try to get text after the last search tool
       let lastSearchIdx = -1;
       response.content.forEach((b, i) => {
         if (b.type === 'server_tool_use' || b.type === 'tool_use' || b.type === 'server_tool_result' || b.type === 'tool_result') {
           lastSearchIdx = i;
         }
       });
-      finalText = response.content
+      const afterSearch = response.content
         .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
         .map(b => b.text)
-        .join('\n\n');
+        .join('\n\n')
+        .trim();
+
+      if (afterSearch.length > 5) {
+        // Good — we have a real answer after the search
+        finalText = afterSearch;
+      } else {
+        // Fallback — strip common narration patterns from all text
+        finalText = allText
+          .replace(/^(Let me|I'll|I will|Searching|Looking|Let me search)[^.]*\.\s*/gi, '')
+          .replace(/^(I'll search|Let me look|Let me find)[^.]*\.\s*/gi, '')
+          .trim();
+      }
     } else {
-      finalText = response.content
-        .filter(b => b.type === 'text')
-        .map(b => b.text)
-        .join('');
+      finalText = allText;
+    }
+
+    // Final safety: if we ended up with nothing, use all text
+    if (!finalText || finalText.length <= 2) {
+      finalText = allText.trim();
     }
 
     // Stream the clean text in chunks for the typing effect
-    const chunkSize = 12;
-    for (let i = 0; i < finalText.length; i += chunkSize) {
-      const chunk = finalText.slice(i, i + chunkSize);
-      res.write(`data: ${JSON.stringify({ type: 'text', content: chunk })}\n\n`);
-    }
+    // Send full text at once for clean rendering
+    res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
@@ -172,6 +188,11 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
     let finalText = '';
     let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
 
+    const allText = response.content
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n\n');
+
     if (hasSearch) {
       let lastSearchIdx = -1;
       response.content.forEach((b, i) => {
@@ -179,22 +200,30 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
           lastSearchIdx = i;
         }
       });
-      finalText = response.content
+      const afterSearch = response.content
         .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
         .map(b => b.text)
-        .join('\n\n');
+        .join('\n\n')
+        .trim();
+
+      if (afterSearch.length > 5) {
+        finalText = afterSearch;
+      } else {
+        finalText = allText
+          .replace(/^(Let me|I'll|I will|Searching|Looking|Let me search)[^.]*\.\s*/gi, '')
+          .replace(/^(I'll search|Let me look|Let me find)[^.]*\.\s*/gi, '')
+          .trim();
+      }
     } else {
-      finalText = response.content
-        .filter(b => b.type === 'text')
-        .map(b => b.text)
-        .join('');
+      finalText = allText;
     }
 
-    const chunkSize = 12;
-    for (let i = 0; i < finalText.length; i += chunkSize) {
-      const chunk = finalText.slice(i, i + chunkSize);
-      res.write(`data: ${JSON.stringify({ type: 'text', content: chunk })}\n\n`);
+    if (!finalText || finalText.length <= 2) {
+      finalText = allText.trim();
     }
+
+    // Send full text at once for clean rendering
+    res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
