@@ -134,7 +134,7 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles', form
     }
 
     const stream = await client.messages.stream({
-      model: format === 'news' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: format === 'news' ? 2048 : 1024,
       system: systemPrompt,
       tools: [WEB_SEARCH_TOOL],
