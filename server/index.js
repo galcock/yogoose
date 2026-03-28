@@ -6,7 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { detectIntent, getAutocompleteSuggestions, getRelatedSites } = require('./services/intent');
-const { streamResponse } = require('./services/claude');
+const { streamResponse, streamFollowup } = require('./services/claude');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -67,6 +67,14 @@ app.get('/api/search', (req, res) => {
   // AI response — stream it with user's timezone
   const tz = req.query.tz || 'America/Los_Angeles';
   streamResponse(intent.query || q, res, tz);
+});
+
+// Follow-up with conversation history
+app.post('/api/followup', (req, res) => {
+  const { query, history, tz } = req.body;
+  if (!query || !query.trim()) return res.json({ error: 'No query' });
+  const timezone = tz || 'America/Los_Angeles';
+  streamFollowup(query, history || [], res, timezone);
 });
 
 // Related sites for AI queries

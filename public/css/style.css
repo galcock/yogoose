@@ -465,6 +465,18 @@ body {
   color: var(--text-secondary);
 }
 
+/* === FOLLOW-UP QUESTION === */
+.followup-question {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: var(--ai-bg);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  border-left: 3px solid var(--ai-accent);
+}
+
 /* === FOLLOW-UP BAR === */
 .followup-bar {
   position: sticky;

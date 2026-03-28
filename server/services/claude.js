@@ -99,4 +99,43 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
   }
 }
 
-module.exports = { streamResponse };
+async function streamFollowup(query, history, res, timezone = 'America/Los_Angeles') {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  });
+
+  try {
+    // Build messages from conversation history + new query
+    const messages = [];
+    for (const msg of history) {
+      messages.push({ role: msg.role, content: msg.content });
+    }
+    messages.push({ role: 'user', content: query });
+
+    const stream = await client.messages.stream({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system: getSystemPrompt(timezone),
+      tools: [WEB_SEARCH_TOOL],
+      messages
+    });
+
+    for await (const event of stream) {
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
+      }
+    }
+
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error('Claude followup error:', err.message);
+    res.write(`data: ${JSON.stringify({ type: 'error', content: 'Something went wrong. Please try again.' })}\n\n`);
+    res.end();
+  }
+}
+
+module.exports = { streamResponse, streamFollowup };

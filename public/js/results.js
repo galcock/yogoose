@@ -14,6 +14,7 @@
 
   let selectedIndex = -1;
   let suggestions = [];
+  let conversationHistory = []; // Track Q&A for follow-ups
   let debounceTimer = null;
 
   if (query) {
@@ -107,6 +108,7 @@
           } else if (event.type === 'done') {
             cursor.remove();
             poweredBy.style.display = 'block';
+            showRelatedSites();
           } else if (event.type === 'error') {
             aiDiv.innerHTML = `<p>${escapeHtml(event.content)}</p>`;
             cursor.remove();
@@ -121,11 +123,20 @@
     cursor.remove();
     aiDiv.innerHTML = renderMarkdown(fullText);
     poweredBy.style.display = 'block';
+    showRelatedSites();
     followupBar.style.display = 'flex';
     followupInput.focus();
+
+    // Store in conversation history
+    conversationHistory.push({ role: 'user', content: currentSearchQuery });
+    conversationHistory.push({ role: 'assistant', content: fullText });
   }
 
+  let currentSearchQuery = query;
+
   // --- Related sites ---
+
+  let relatedSitesReady = false;
 
   async function fetchRelatedSites(q) {
     try {
@@ -144,8 +155,15 @@
           </a>
         `).join('')}
       `;
-      relatedSites.style.display = 'block';
+      // Don't show yet — wait until AI response starts streaming
+      relatedSitesReady = true;
     } catch (e) {}
+  }
+
+  function showRelatedSites() {
+    if (relatedSitesReady) {
+      relatedSites.style.display = 'block';
+    }
   }
 
   // --- Markdown renderer ---
@@ -291,12 +309,85 @@
 
   // --- Follow-up ---
 
-  function sendFollowup() {
+  async function sendFollowup() {
     const q = followupInput.value.trim();
     if (!q) return;
     followupInput.value = '';
-    input.value = q;
-    window.location.href = `/results.html?q=${encodeURIComponent(q)}`;
+    followupBar.style.display = 'none';
+    currentSearchQuery = q;
+
+    // Add the user's follow-up as a visible question
+    const userQ = document.createElement('div');
+    userQ.className = 'followup-question';
+    userQ.textContent = q;
+    responseArea.appendChild(userQ);
+
+    // Add a new AI response div with cursor
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'ai-response';
+    responseArea.appendChild(aiDiv);
+
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    aiDiv.appendChild(cursor);
+
+    // Scroll to the follow-up
+    userQ.scrollIntoView({ behavior: 'smooth' });
+
+    // Stream follow-up with conversation history
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const res = await fetch('/api/followup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: q,
+          history: conversationHistory,
+          tz: tz
+        })
+      });
+
+      let fullText = '';
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === 'text') {
+              fullText += event.content;
+              aiDiv.innerHTML = renderMarkdown(fullText);
+              aiDiv.appendChild(cursor);
+              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            } else if (event.type === 'done') {
+              cursor.remove();
+            }
+          } catch (e) {}
+        }
+      }
+
+      cursor.remove();
+      aiDiv.innerHTML = renderMarkdown(fullText);
+      conversationHistory.push({ role: 'user', content: q });
+      conversationHistory.push({ role: 'assistant', content: fullText });
+
+      followupBar.style.display = 'flex';
+      followupInput.focus();
+    } catch (err) {
+      cursor.remove();
+      aiDiv.innerHTML = '<p>Something went wrong. Please try again.</p>';
+      followupBar.style.display = 'flex';
+    }
   }
 
   followupSend.addEventListener('click', sendFollowup);
