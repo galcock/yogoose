@@ -78,6 +78,59 @@ app.get('/api/search', (req, res) => {
   streamResponse(intent.query || q, res, tz);
 });
 
+// Link map — returns brand names mapped to URLs for auto-linking
+app.get('/api/linkmap', (req, res) => {
+  const sites = require('./data/sites.json');
+  const map = {};
+  for (const site of sites) {
+    // Only include sites with recognizable names (4+ chars, not abbreviations)
+    if (site.name.length >= 4) {
+      map[site.name] = site.url;
+    }
+  }
+  // Add extra common services/brands not in our nav DB
+  Object.assign(map, {
+    'Apple TV': 'https://tv.apple.com',
+    'Apple TV+': 'https://tv.apple.com',
+    'Fandango': 'https://fandango.com',
+    'AMC Theatres': 'https://amctheatres.com',
+    'Regal': 'https://regmovies.com',
+    'Cinemark': 'https://cinemark.com',
+    'NBA League Pass': 'https://nba.com/watch',
+    'NFL Sunday Ticket': 'https://tv.youtube.com/nfl',
+    'ESPN+': 'https://plus.espn.com',
+    'Peacock': 'https://peacocktv.com',
+    'Paramount+': 'https://paramountplus.com',
+    'Crunchyroll': 'https://crunchyroll.com',
+    'Amazon Prime': 'https://primevideo.com',
+    'Prime Video': 'https://primevideo.com',
+    'Spectrum SportsNet': 'https://spectrum.net',
+    'YES Network': 'https://yesnetwork.com',
+    'TNT': 'https://tntdrama.com',
+    'TBS': 'https://tbs.com',
+    'ABC': 'https://abc.com',
+    'CBS': 'https://cbs.com',
+    'NBC': 'https://nbc.com',
+    'FOX': 'https://fox.com',
+    'NBATV': 'https://nba.com/watch',
+    'MLB.TV': 'https://mlb.com/tv',
+    'NFL Network': 'https://nfl.com/network',
+    'Rotten Tomatoes': 'https://rottentomatoes.com',
+    'Fresh Kernels': 'https://freshkernels.com',
+    'Metacritic': 'https://metacritic.com',
+    'Letterboxd': 'https://letterboxd.com',
+    'Google Maps': 'https://maps.google.com',
+    'Uber Eats': 'https://ubereats.com',
+    'DoorDash': 'https://doordash.com',
+    'Instacart': 'https://instacart.com',
+    'GoodRx': 'https://goodrx.com',
+    'Zillow': 'https://zillow.com',
+    'Fidelity': 'https://fidelity.com',
+    'Vanguard': 'https://vanguard.com',
+  });
+  res.json(map);
+});
+
 // News feed API
 app.get('/api/news', async (req, res) => {
   try {

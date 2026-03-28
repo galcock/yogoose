@@ -325,6 +325,16 @@ body {
   text-decoration: underline;
 }
 
+.ai-response a.auto-link {
+  color: var(--ai-accent);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--ai-accent);
+}
+
+.ai-response a.auto-link:hover {
+  border-bottom-style: solid;
+}
+
 .ai-response strong { font-weight: 600; }
 .ai-response em { font-style: italic; }
 

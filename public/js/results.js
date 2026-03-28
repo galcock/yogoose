@@ -16,6 +16,10 @@
   let suggestions = [];
   let conversationHistory = []; // Track Q&A for follow-ups
   let debounceTimer = null;
+  let linkMap = null;
+
+  // Fetch link map for auto-linking brand names
+  fetch('/api/linkmap').then(r => r.json()).then(map => { linkMap = map; }).catch(() => {});
 
   if (query) {
     input.value = query;
@@ -181,6 +185,9 @@
     showRelatedSites();
     followupBar.style.display = 'flex';
     followupInput.focus();
+
+    // Auto-link brand names
+    autoLinkBrands(aiDiv);
 
     // Store in conversation history
     conversationHistory.push({ role: 'user', content: currentSearchQuery });
@@ -433,6 +440,7 @@
 
       cursor.remove();
       aiDiv.innerHTML = renderMarkdown(fullText);
+      autoLinkBrands(aiDiv);
       conversationHistory.push({ role: 'user', content: q });
       conversationHistory.push({ role: 'assistant', content: fullText });
 
@@ -587,6 +595,75 @@
     }, 100);
 
     return container;
+  }
+
+  // --- Auto-linking ---
+  // Turns brand/service names in AI responses into clickable links
+  function autoLinkBrands(element) {
+    if (!linkMap) return;
+
+    // Sort by name length (longest first) to match "Apple TV+" before "Apple"
+    const entries = Object.entries(linkMap).sort((a, b) => b[0].length - a[0].length);
+
+    // Walk text nodes only (don't mess with existing links or code blocks)
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        const tag = parent.tagName.toLowerCase();
+        // Skip if already inside a link, code block, or heading
+        if (tag === 'a' || tag === 'code' || tag === 'pre') return NodeFilter.FILTER_REJECT;
+        // Skip if parent is already a link
+        if (parent.closest('a')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+    const linked = new Set(); // Only link each brand once
+
+    for (const node of textNodes) {
+      let text = node.textContent;
+      let replaced = false;
+
+      for (const [name, url] of entries) {
+        if (linked.has(name)) continue;
+        if (name.length < 4) continue; // Skip very short names
+
+        // Case-insensitive search but preserve original case
+        const idx = text.toLowerCase().indexOf(name.toLowerCase());
+        if (idx === -1) continue;
+
+        // Check it's a word boundary (not part of a longer word)
+        const before = idx > 0 ? text[idx - 1] : ' ';
+        const after = idx + name.length < text.length ? text[idx + name.length] : ' ';
+        if (/[a-zA-Z]/.test(before) || /[a-zA-Z]/.test(after)) continue;
+
+        const originalText = text.substring(idx, idx + name.length);
+        const beforeText = text.substring(0, idx);
+        const afterText = text.substring(idx + name.length);
+
+        const frag = document.createDocumentFragment();
+        if (beforeText) frag.appendChild(document.createTextNode(beforeText));
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.textContent = originalText;
+        link.className = 'auto-link';
+        frag.appendChild(link);
+
+        if (afterText) frag.appendChild(document.createTextNode(afterText));
+
+        node.parentNode.replaceChild(frag, node);
+        linked.add(name);
+        replaced = true;
+        break; // Move to next text node since this one was split
+      }
+    }
   }
 
   function escapeHtml(str) {
