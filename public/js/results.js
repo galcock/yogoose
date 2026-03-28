@@ -86,6 +86,10 @@
           window.location.replace(data.url);
           return;
         }
+        if (data.type === 'news') {
+          renderNewsFeed();
+          return;
+        }
       }
     } catch (err) {
       responseArea.innerHTML = '<div class="ai-response"><p>Something went wrong. Please try again.</p></div>';
@@ -452,6 +456,63 @@
   // --- Utility ---
 
   // --- Financial charts ---
+
+  // --- News Feed ---
+
+  async function renderNewsFeed() {
+    try {
+      const res = await fetch('/api/news');
+      const articles = await res.json();
+
+      if (!articles || articles.length === 0) {
+        responseArea.innerHTML = '<div class="ai-response"><p>Unable to load news. Try again.</p></div>';
+        return;
+      }
+
+      // Fade out goose
+      const goose = responseArea.querySelector('.goose-loading');
+      if (goose) {
+        goose.classList.add('goose-fade-out');
+        await new Promise(r => setTimeout(r, 400));
+      }
+
+      // Build Apple News-style feed
+      const hero = articles[0];
+      const rest = articles.slice(1);
+
+      responseArea.innerHTML = `
+        <div class="news-feed-container">
+          <a href="${hero.url}" target="_blank" rel="noopener" class="news-hero">
+            ${hero.image ? `<div class="news-hero-image" style="background-image:url('${hero.image}')"></div>` : ''}
+            <div class="news-hero-content">
+              <span class="news-source">${escapeHtml(hero.source)}</span>
+              <h2 class="news-hero-title">${escapeHtml(hero.title)}</h2>
+              <p class="news-hero-desc">${escapeHtml(hero.description || '')}</p>
+              <span class="news-time">${hero.timeAgo || ''}</span>
+            </div>
+          </a>
+
+          <div class="news-grid">
+            ${rest.map(a => `
+              <a href="${a.url}" target="_blank" rel="noopener" class="news-card">
+                ${a.image ? `<div class="news-card-image" style="background-image:url('${a.image}')"></div>` : '<div class="news-card-image news-card-no-image"></div>'}
+                <div class="news-card-content">
+                  <span class="news-source">${escapeHtml(a.source)}</span>
+                  <h3 class="news-card-title">${escapeHtml(a.title)}</h3>
+                  <span class="news-time">${a.timeAgo || ''}</span>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      showRelatedSites();
+      poweredBy.style.display = 'block';
+    } catch (err) {
+      responseArea.innerHTML = '<div class="ai-response"><p>Unable to load news. Try again.</p></div>';
+    }
+  }
 
   function getFinancialChart(q) {
     const lower = q.toLowerCase();

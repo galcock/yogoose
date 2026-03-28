@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { detectIntent, getAutocompleteSuggestions, getRelatedSites } = require('./services/intent');
 const { streamResponse, streamFollowup } = require('./services/claude');
+const { getTopHeadlines, timeAgo } = require('./services/news');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,12 +66,29 @@ app.get('/api/search', (req, res) => {
     return res.json(intent);
   }
 
+  // Check if this is a news query — serve news feed directly (no AI needed)
+  const newsWords = ['news', 'headlines', 'breaking news', 'today news', 'current events', 'top stories'];
+  const isNews = newsWords.some(w => (intent.query || q).toLowerCase().trim() === w || (intent.query || q).toLowerCase().includes(w));
+  if (isNews) {
+    return res.json({ type: 'news' });
+  }
+
   // AI response — stream it with user's timezone
   const tz = req.query.tz || 'America/Los_Angeles';
-  // Check if this is a news query
-  const newsWords = ['news', 'headlines', 'breaking news', 'today news', 'current events', 'top stories'];
-  const isNews = newsWords.some(w => (intent.query || q).toLowerCase().includes(w));
-  streamResponse(intent.query || q, res, tz, isNews ? 'news' : null);
+  streamResponse(intent.query || q, res, tz);
+});
+
+// News feed API
+app.get('/api/news', async (req, res) => {
+  try {
+    const articles = await getTopHeadlines(10);
+    res.json(articles.map(a => ({
+      ...a,
+      timeAgo: timeAgo(a.publishedAt)
+    })));
+  } catch (err) {
+    res.json([]);
+  }
 });
 
 // Follow-up with conversation history
