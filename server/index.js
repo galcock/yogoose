@@ -64,8 +64,9 @@ app.get('/api/search', (req, res) => {
     return res.json(intent);
   }
 
-  // AI response — stream it
-  streamResponse(intent.query || q, res);
+  // AI response — stream it with user's timezone
+  const tz = req.query.tz || 'America/Los_Angeles';
+  streamResponse(intent.query || q, res, tz);
 });
 
 // Related sites for AI queries

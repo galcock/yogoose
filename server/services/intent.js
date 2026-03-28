@@ -665,6 +665,22 @@ function getRelatedSites(query, limit = 3) {
   const results = [];
   const seen = new Set();
 
+  // 0. Check for sports team names — generate contextual links
+  const NBA_TEAMS = { 'lakers': 'Los Angeles Lakers', 'celtics': 'Boston Celtics', 'warriors': 'Golden State Warriors', 'bulls': 'Chicago Bulls', 'knicks': 'New York Knicks', 'nets': 'Brooklyn Nets', 'heat': 'Miami Heat', 'bucks': 'Milwaukee Bucks', 'sixers': 'Philadelphia 76ers', '76ers': 'Philadelphia 76ers', 'nuggets': 'Denver Nuggets', 'suns': 'Phoenix Suns', 'mavericks': 'Dallas Mavericks', 'mavs': 'Dallas Mavericks', 'clippers': 'LA Clippers', 'raptors': 'Toronto Raptors', 'spurs': 'San Antonio Spurs', 'thunder': 'Oklahoma City Thunder', 'grizzlies': 'Memphis Grizzlies', 'pelicans': 'New Orleans Pelicans', 'hawks': 'Atlanta Hawks', 'cavaliers': 'Cleveland Cavaliers', 'cavs': 'Cleveland Cavaliers', 'pacers': 'Indiana Pacers', 'pistons': 'Detroit Pistons', 'wizards': 'Washington Wizards', 'hornets': 'Charlotte Hornets', 'magic': 'Orlando Magic', 'timberwolves': 'Minnesota Timberwolves', 'wolves': 'Minnesota Timberwolves', 'blazers': 'Portland Trail Blazers', 'kings': 'Sacramento Kings', 'jazz': 'Utah Jazz', 'rockets': 'Houston Rockets' };
+  const NFL_TEAMS = { 'cowboys': 'Dallas Cowboys', 'patriots': 'New England Patriots', 'chiefs': 'Kansas City Chiefs', 'eagles': 'Philadelphia Eagles', 'packers': 'Green Bay Packers', '49ers': 'San Francisco 49ers', 'niners': 'San Francisco 49ers', 'steelers': 'Pittsburgh Steelers', 'ravens': 'Baltimore Ravens', 'bills': 'Buffalo Bills', 'broncos': 'Denver Broncos', 'dolphins': 'Miami Dolphins', 'bears': 'Chicago Bears', 'giants': 'New York Giants', 'jets': 'New York Jets', 'rams': 'Los Angeles Rams', 'chargers': 'Los Angeles Chargers', 'seahawks': 'Seattle Seahawks', 'saints': 'New Orleans Saints', 'falcons': 'Atlanta Falcons', 'vikings': 'Minnesota Vikings', 'bengals': 'Cincinnati Bengals', 'browns': 'Cleveland Browns', 'lions': 'Detroit Lions', 'titans': 'Tennessee Titans', 'colts': 'Indianapolis Colts', 'texans': 'Houston Texans', 'jaguars': 'Jacksonville Jaguars', 'commanders': 'Washington Commanders', 'panthers': 'Carolina Panthers', 'buccaneers': 'Tampa Bay Buccaneers', 'bucs': 'Tampa Bay Buccaneers', 'cardinals': 'Arizona Cardinals', 'raiders': 'Las Vegas Raiders' };
+  const MLB_TEAMS = { 'yankees': 'New York Yankees', 'dodgers': 'Los Angeles Dodgers', 'mets': 'New York Mets', 'cubs': 'Chicago Cubs', 'braves': 'Atlanta Braves', 'astros': 'Houston Astros', 'phillies': 'Philadelphia Phillies', 'padres': 'San Diego Padres', 'red sox': 'Boston Red Sox', 'redsox': 'Boston Red Sox', 'white sox': 'Chicago White Sox', 'giants': 'San Francisco Giants', 'cardinals': 'St. Louis Cardinals', 'mariners': 'Seattle Mariners', 'rangers': 'Texas Rangers', 'twins': 'Minnesota Twins', 'guardians': 'Cleveland Guardians', 'orioles': 'Baltimore Orioles', 'rays': 'Tampa Bay Rays', 'royals': 'Kansas City Royals', 'tigers': 'Detroit Tigers', 'angels': 'Los Angeles Angels', 'athletics': 'Oakland Athletics', 'brewers': 'Milwaukee Brewers', 'reds': 'Cincinnati Reds', 'pirates': 'Pittsburgh Pirates', 'rockies': 'Colorado Rockies', 'marlins': 'Miami Marlins', 'nationals': 'Washington Nationals', 'diamondbacks': 'Arizona Diamondbacks', 'dbacks': 'Arizona Diamondbacks', 'blue jays': 'Toronto Blue Jays' };
+
+  for (const word of words) {
+    const teamName = NBA_TEAMS[word] || NFL_TEAMS[word] || MLB_TEAMS[word];
+    if (teamName) {
+      return [
+        { name: `${teamName} on ESPN`, url: `https://www.espn.com/search/_/q/${encodeURIComponent(teamName)}` },
+        { name: `${teamName} on NBA.com`, url: NBA_TEAMS[word] ? `https://www.nba.com/search?filters=&q=${encodeURIComponent(teamName)}` : NFL_TEAMS[word] ? `https://www.nfl.com/search?query=${encodeURIComponent(teamName)}` : `https://www.mlb.com/search?q=${encodeURIComponent(teamName)}` },
+        { name: `${teamName} on Reddit`, url: `https://www.reddit.com/search/?q=${encodeURIComponent(teamName)}` }
+      ];
+    }
+  }
+
   // 1. Match topics by keywords FIRST (most reliable)
   const matchedTopics = new Set();
   for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {

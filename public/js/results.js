@@ -49,7 +49,8 @@
     fetchRelatedSites(q);
 
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&tz=${encodeURIComponent(tz)}`);
       const contentType = res.headers.get('content-type') || '';
 
       if (contentType.includes('text/event-stream')) {
