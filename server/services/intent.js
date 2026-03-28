@@ -649,15 +649,18 @@ const TOPIC_KEYWORDS = {
   gardening: ['gardening', 'garden', 'plant', 'flower', 'seed', 'soil', 'compost', 'fertilizer', 'pruning', 'landscaping', 'lawn', 'vegetable garden', 'herb garden']
 };
 
-// Default fallback sites for when nothing matches
-const DEFAULT_SITES = [
-  { name: 'Wikipedia', url: 'https://en.wikipedia.org' },
-  { name: 'Reddit', url: 'https://reddit.com' },
-  { name: 'YouTube', url: 'https://youtube.com' }
-];
+// Generate search-specific fallback links using the query
+function getDefaultSites(query) {
+  const q = encodeURIComponent(query);
+  return [
+    { name: `${query} on Wikipedia`, url: `https://en.wikipedia.org/w/index.php?search=${q}` },
+    { name: `${query} on Reddit`, url: `https://www.reddit.com/search/?q=${q}` },
+    { name: `${query} on YouTube`, url: `https://www.youtube.com/results?search_query=${q}` }
+  ];
+}
 
 function getRelatedSites(query, limit = 3) {
-  if (!query) return DEFAULT_SITES;
+  if (!query) return getDefaultSites('search');
 
   const normalized = query.toLowerCase().trim();
   const stopWords = new Set(['the', 'what', 'how', 'why', 'where', 'when', 'who', 'which', 'is', 'are', 'was', 'were', 'do', 'does', 'did', 'can', 'could', 'should', 'will', 'would', 'has', 'have', 'had', 'for', 'and', 'but', 'not', 'you', 'your', 'with', 'this', 'that', 'from', 'they', 'been', 'its', 'than', 'into', 'about', 'between', 'through', 'best', 'most', 'more', 'some', 'any', 'all', 'very', 'just', 'also', 'much', 'many', 'way', 'make', 'like', 'get', 'use']);
@@ -707,8 +710,9 @@ function getRelatedSites(query, limit = 3) {
     }
   }
 
-  // 3. Always return at least 3 — fill with defaults
-  for (const site of DEFAULT_SITES) {
+  // 3. Always return at least 3 — fill with search-specific defaults
+  const defaults = getDefaultSites(query);
+  for (const site of defaults) {
     if (!seen.has(site.url)) {
       seen.add(site.url);
       results.push(site);
