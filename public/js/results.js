@@ -83,7 +83,7 @@
       } else {
         const data = await res.json();
         if (data.type === 'navigate') {
-          window.location.href = data.url;
+          window.location.replace(data.url);
           return;
         }
       }
