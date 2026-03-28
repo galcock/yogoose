@@ -62,12 +62,14 @@ You have access to a web_search tool. USE IT AGGRESSIVELY. Search first, answer 
 - If someone asks "what is X" and X could be a website, product, company, or brand — SEARCH FOR IT
 - Never say "I'm not familiar with" or "I don't recognize" — just search for it
 
+CRITICAL: NEVER narrate what you're doing. Do NOT say "Let me search...", "I'll look that up...", "Searching for...", or similar. Just give the answer directly. If you use web_search, do NOT mention it — just present the results.
+
 Do NOT:
 - Start with "Great question" or similar filler
 - Repeat the question back
 - Add unnecessary caveats or disclaimers
 - Be overly verbose
-- NEVER narrate what you're doing ("Let me search...", "I'll look that up...", "Searching for..."). Just give the answer directly.
+- NEVER narrate what you're doing
 - NEVER say you don't have access to real-time information
 - NEVER say you're not familiar with something — SEARCH FOR IT INSTEAD
 - NEVER ask the user for more context before trying to answer — search first, then answer with what you find
@@ -86,11 +88,6 @@ For sports queries specifically, include ALL of this:
 
 You are replacing Google search. Users expect fast, accurate, up-to-date answers.`;
 }
-
-const WEB_SEARCH_TOOL = {
-  name: 'web_search',
-  type: 'web_search_20250305'
-};
 
 const NEWS_FORMAT_INSTRUCTION = `
 FORMAT YOUR RESPONSE AS A NEWS FEED. Use EXACTLY this markdown format for each story:
@@ -111,6 +108,12 @@ Include 8-10 top news stories. Search for "top news today" and "breaking news" t
 DO NOT include any intro text like "Here are today's top stories". Just start with the first headline.
 `;
 
+const WEB_SEARCH_TOOL = {
+  name: 'web_search',
+  type: 'web_search_20250305'
+};
+
+// Stream response directly — no buffering, maximum speed
 async function streamResponse(query, res, timezone = 'America/Los_Angeles', format = null) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -125,6 +128,11 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles', form
       systemPrompt += '\n\n' + NEWS_FORMAT_INSTRUCTION;
     }
 
+    // Send format info to client
+    if (format) {
+      res.write(`data: ${JSON.stringify({ type: 'format', format })}\n\n`);
+    }
+
     const stream = await client.messages.stream({
       model: format === 'news' ? 'claude-sonnet-4-20250514' : 'claude-haiku-4-5-20251001',
       max_tokens: format === 'news' ? 2048 : 1024,
@@ -133,72 +141,29 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles', form
       messages: [{ role: 'user', content: format === 'news' ? 'Show me today\'s top news headlines' : query }]
     });
 
-    // Send format info to client
-    if (format) {
-      res.write(`data: ${JSON.stringify({ type: 'format', format })}\n\n`);
-    }
+    // Track which content block is after search (the actual answer)
+    let seenSearch = false;
+    let inAnswerBlock = false;
 
-    const response = await stream.finalMessage();
-
-    // Extract only text blocks from the final response
-    let finalText = '';
-    let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
-
-    // Get all text blocks
-    const allText = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n\n');
-
-    if (hasSearch) {
-      // Try to get text after the last search tool
-      let lastSearchIdx = -1;
-      response.content.forEach((b, i) => {
-        if (b.type === 'server_tool_use' || b.type === 'tool_use' || b.type === 'server_tool_result' || b.type === 'tool_result') {
-          lastSearchIdx = i;
+    for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
+          seenSearch = true;
+          inAnswerBlock = false;
+        } else if (event.content_block?.type === 'text') {
+          // If we've seen a search, this text block is the answer
+          // If no search yet, this is potentially narration
+          inAnswerBlock = seenSearch;
         }
-      });
-      const afterSearch = response.content
-        .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
-        .map(b => b.text)
-        .join('\n\n')
-        .trim();
-
-      if (afterSearch.length > 5) {
-        // Good — we have a real answer after the search
-        finalText = afterSearch;
-      } else {
-        // Fallback — strip common narration patterns from all text
-        finalText = allText
-          .replace(/^(Let me|I'll|I will|Searching|Looking|Let me search)[^.]*\.\s*/gi, '')
-          .replace(/^(I'll search|Let me look|Let me find)[^.]*\.\s*/gi, '')
-          .trim();
       }
-    } else {
-      finalText = allText;
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        if (!seenSearch || inAnswerBlock) {
+          // Stream it — either no search was used (direct answer) or this is post-search answer
+          res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
+        }
+        // Skip pre-search narration text blocks
+      }
     }
-
-    // Final safety: if we ended up with nothing, use all text
-    if (!finalText || finalText.length <= 2) {
-      finalText = allText.trim();
-    }
-
-    // Clean up fragmented text from web search citations
-    // Remove line breaks that split sentences (keep paragraph breaks)
-    finalText = finalText
-      .replace(/\n{3,}/g, '\n\n')           // Collapse 3+ newlines to 2
-      .replace(/\n\n([a-z,;])/g, ' $1')     // Join if next line starts lowercase (mid-sentence)
-      .replace(/([^.!?\n])\n\n([A-Z])/g, (m, before, after) => {
-        // Check if the line before ended mid-sentence (no period)
-        if (/[,;:]$/.test(before.trim())) return before + ' ' + after;
-        return m; // Keep the paragraph break
-      })
-      .replace(/\n\n\./g, '.')              // Remove orphaned periods on new lines
-      .replace(/\n\n,/g, ',')              // Remove orphaned commas on new lines
-      .trim();
-
-    // Send full text at once for clean rendering
-    res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
@@ -218,7 +183,6 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
   });
 
   try {
-    // Build messages from conversation history + new query
     const messages = [];
     for (const msg of history) {
       messages.push({ role: msg.role, content: msg.content });
@@ -233,59 +197,24 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
       messages
     });
 
-    const response = await stream.finalMessage();
+    let seenSearch = false;
+    let inAnswerBlock = false;
 
-    let finalText = '';
-    let hasSearch = response.content.some(b => b.type === 'server_tool_use' || b.type === 'tool_use');
-
-    const allText = response.content
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('\n\n');
-
-    if (hasSearch) {
-      let lastSearchIdx = -1;
-      response.content.forEach((b, i) => {
-        if (b.type === 'server_tool_use' || b.type === 'tool_use' || b.type === 'server_tool_result' || b.type === 'tool_result') {
-          lastSearchIdx = i;
+    for await (const event of stream) {
+      if (event.type === 'content_block_start') {
+        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
+          seenSearch = true;
+          inAnswerBlock = false;
+        } else if (event.content_block?.type === 'text') {
+          inAnswerBlock = seenSearch;
         }
-      });
-      const afterSearch = response.content
-        .filter((b, i) => b.type === 'text' && i > lastSearchIdx)
-        .map(b => b.text)
-        .join('\n\n')
-        .trim();
-
-      if (afterSearch.length > 5) {
-        finalText = afterSearch;
-      } else {
-        finalText = allText
-          .replace(/^(Let me|I'll|I will|Searching|Looking|Let me search)[^.]*\.\s*/gi, '')
-          .replace(/^(I'll search|Let me look|Let me find)[^.]*\.\s*/gi, '')
-          .trim();
       }
-    } else {
-      finalText = allText;
+      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        if (!seenSearch || inAnswerBlock) {
+          res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
+        }
+      }
     }
-
-    if (!finalText || finalText.length <= 2) {
-      finalText = allText.trim();
-    }
-
-    // Clean up fragmented text
-    finalText = finalText
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/\n\n([a-z,;])/g, ' $1')
-      .replace(/([^.!?\n])\n\n([A-Z])/g, (m, before, after) => {
-        if (/[,;:]$/.test(before.trim())) return before + ' ' + after;
-        return m;
-      })
-      .replace(/\n\n\./g, '.')
-      .replace(/\n\n,/g, ',')
-      .trim();
-
-    // Send full text at once for clean rendering
-    res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
