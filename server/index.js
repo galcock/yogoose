@@ -158,9 +158,17 @@ app.get('/api/ambient', async (req, res) => {
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
+      max_tokens: 800,
       tools: [{ name: 'web_search', type: 'web_search_20250305' }],
-      messages: [{ role: 'user', content: `Today is ${dateStr}. Give me exactly 5 short one-line tidbits that someone in Los Angeles would find interesting right now. Include local sports games happening today/tonight with times in PT, weather, and any trending local news. Format as a JSON array of strings, nothing else. Each item should be under 80 characters. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "72°F and sunny in LA today"]` }]
+      messages: [{ role: 'user', content: `Today is ${dateStr}. Give me exactly 15 short one-line tidbits that someone in Los Angeles would find interesting right now. Mix these categories:
+- Local sports: NBA, MLB, NHL, MLS, WNBA games today/tonight with times in PT
+- Weather: today's high/low, any alerts
+- Trending news: top 2-3 national/local headlines
+- Entertainment: new movie releases, concerts, events in LA this weekend
+- Traffic/transit: any major closures or delays
+- Finance: major stock market move if notable
+- Local events: festivals, openings, things to do this weekend
+Format as a JSON array of strings, nothing else. Each item under 80 characters. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "85°F and sunny in LA today"]` }]
     });
 
     // Extract JSON from the response
