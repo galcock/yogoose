@@ -176,12 +176,16 @@ Also include 2-3 major NON-local items like:
 Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "F1 Japanese Grand Prix Sunday 10 PM PT"]` }]
     });
 
-    // Extract JSON from the response
+    // Extract JSON from the response, strip citation tags
     const textBlocks = response.content.filter(b => b.type === 'text');
-    const text = textBlocks[textBlocks.length - 1]?.text || '[]';
+    let text = textBlocks[textBlocks.length - 1]?.text || '[]';
+    // Strip <cite> tags that come from web search
+    text = text.replace(/<cite[^>]*>/g, '').replace(/<\/cite>/g, '');
     const match = text.match(/\[[\s\S]*\]/);
     if (match) {
-      res.json(JSON.parse(match[0]));
+      const items = JSON.parse(match[0]);
+      // Clean any remaining HTML tags from items
+      res.json(items.map(item => item.replace(/<[^>]*>/g, '').trim()));
     } else {
       res.json([]);
     }
