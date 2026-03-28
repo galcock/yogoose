@@ -146,7 +146,20 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles') {
       finalText = allText.trim();
     }
 
-    // Stream the clean text in chunks for the typing effect
+    // Clean up fragmented text from web search citations
+    // Remove line breaks that split sentences (keep paragraph breaks)
+    finalText = finalText
+      .replace(/\n{3,}/g, '\n\n')           // Collapse 3+ newlines to 2
+      .replace(/\n\n([a-z,;])/g, ' $1')     // Join if next line starts lowercase (mid-sentence)
+      .replace(/([^.!?\n])\n\n([A-Z])/g, (m, before, after) => {
+        // Check if the line before ended mid-sentence (no period)
+        if (/[,;:]$/.test(before.trim())) return before + ' ' + after;
+        return m; // Keep the paragraph break
+      })
+      .replace(/\n\n\./g, '.')              // Remove orphaned periods on new lines
+      .replace(/\n\n,/g, ',')              // Remove orphaned commas on new lines
+      .trim();
+
     // Send full text at once for clean rendering
     res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
 
@@ -221,6 +234,18 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
     if (!finalText || finalText.length <= 2) {
       finalText = allText.trim();
     }
+
+    // Clean up fragmented text
+    finalText = finalText
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n\n([a-z,;])/g, ' $1')
+      .replace(/([^.!?\n])\n\n([A-Z])/g, (m, before, after) => {
+        if (/[,;:]$/.test(before.trim())) return before + ' ' + after;
+        return m;
+      })
+      .replace(/\n\n\./g, '.')
+      .replace(/\n\n,/g, ',')
+      .trim();
 
     // Send full text at once for clean rendering
     res.write(`data: ${JSON.stringify({ type: 'text', content: finalText })}\n\n`);
