@@ -101,32 +101,55 @@
     }
   </script>
   <script>
-    // Ambient ticker — single div that fades text in and out
+    // Ambient ticker — show instant placeholders, then swap in live data
     {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      fetch(`/api/ambient?tz=${encodeURIComponent(tz)}`)
-        .then(r => r.json())
-        .then(items => {
-          if (!items || items.length === 0) return;
-          const ticker = document.getElementById('ambientTicker');
-          if (!ticker) return;
+      const ticker = document.getElementById('ambientTicker');
+      if (ticker) {
+        // Instant static tidbits while API loads
+        const placeholders = [
+          'Type anything — Yogoose knows if you want a site or an answer',
+          'Try typing "youtube" or "what is AI"',
+          'Yogoose replaces Google AND ChatGPT',
+        ];
 
-          let current = 0;
-          ticker.textContent = items[0];
+        let items = [...placeholders];
+        let current = 0;
+        let interval;
+
+        function startTicker() {
+          ticker.textContent = items[current];
           ticker.style.opacity = '0.5';
-
-          setInterval(() => {
-            // Fade out
+          interval = setInterval(() => {
             ticker.style.opacity = '0';
             setTimeout(() => {
               current = (current + 1) % items.length;
               ticker.textContent = items[current];
-              // Fade in
               ticker.style.opacity = '0.5';
             }, 800);
-          }, 5000);
-        })
-        .catch(() => {});
+          }, 4000);
+        }
+
+        // Show placeholders immediately
+        startTicker();
+
+        // Fetch real tidbits in background — when they arrive, replace placeholders
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        fetch(`/api/ambient?tz=${encodeURIComponent(tz)}`)
+          .then(r => r.json())
+          .then(liveItems => {
+            if (liveItems && liveItems.length > 0) {
+              items = liveItems;
+              current = 0;
+              clearInterval(interval);
+              // Fade out current, start with live items
+              ticker.style.opacity = '0';
+              setTimeout(() => {
+                startTicker();
+              }, 800);
+            }
+          })
+          .catch(() => {});
+      }
     }
   </script>
 </body>

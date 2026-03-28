@@ -158,17 +158,18 @@ app.get('/api/ambient', async (req, res) => {
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      max_tokens: 500,
       tools: [{ name: 'web_search', type: 'web_search_20250305' }],
-      messages: [{ role: 'user', content: `Today is ${dateStr}. Give me exactly 15 short one-line tidbits that someone in Los Angeles would find interesting right now. Mix these categories:
-- Local sports: NBA, MLB, NHL, MLS, WNBA games today/tonight with times in PT
-- Weather: today's high/low, any alerts
-- Trending news: top 2-3 national/local headlines
-- Entertainment: new movie releases, concerts, events in LA this weekend
-- Traffic/transit: any major closures or delays
-- Finance: major stock market move if notable
-- Local events: festivals, openings, things to do this weekend
-Format as a JSON array of strings, nothing else. Each item under 80 characters. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "85°F and sunny in LA today"]` }]
+      messages: [{ role: 'user', content: `Today is ${dateStr}. Give me exactly 10 short one-line tidbits for someone in Los Angeles, SORTED BY POPULARITY/INTEREST (most interesting first). Priority order:
+1. Lakers game today/tonight (ALWAYS first if they play)
+2. Dodgers game today/tonight (ALWAYS second if they play)
+3. Other major LA sports (Rams, Chargers, Clippers, Kings, Galaxy, LAFC)
+4. Weather
+5. Biggest national news headline
+6. Entertainment/movies in theaters
+7. Local events this weekend
+8. Stock market if notable move
+Format as a JSON array of strings. Each under 80 chars. Example: ["Lakers vs Nets tonight at 7:30 PM PT", "Dodgers vs DBacks at 7:10 PM PT"]` }]
     });
 
     // Extract JSON from the response
