@@ -35,13 +35,13 @@ async function getFallbackNews(count = 10) {
     const feeds = [
       'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
       'https://feeds.bbci.co.uk/news/rss.xml',
-      'https://www.reutersagency.com/feed/'
+      'https://feeds.npr.org/1001/rss.xml'
     ];
     
     const results = [];
     for (const feed of feeds) {
       try {
-        const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}&count=5`;
+        const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`;
         const res = await fetch(url);
         if (!res.ok) continue;
         const data = await res.json();

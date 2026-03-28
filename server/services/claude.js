@@ -143,28 +143,52 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles', form
       messages: [{ role: 'user', content: format === 'news' ? 'Show me today\'s top news headlines' : query }]
     });
 
-    // Track which content block is after search (the actual answer)
-    let seenSearch = false;
-    let inAnswerBlock = false;
+    // Strategy: buffer text before any search tool is used.
+    // If search happens, discard the buffer (it's narration).
+    // Stream everything after the last search result.
+    let preSearchBuffer = '';
+    let searchActive = false;  // true while a search tool is being used
+    let searchCompleted = false;  // true after search results come back
+    let currentBlockIsText = false;
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
-        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
-          seenSearch = true;
-          inAnswerBlock = false;
-        } else if (event.content_block?.type === 'text') {
-          // If we've seen a search, this text block is the answer
-          // If no search yet, this is potentially narration
-          inAnswerBlock = seenSearch;
+        const blockType = event.content_block?.type;
+        if (blockType === 'server_tool_use' || blockType === 'tool_use') {
+          searchActive = true;
+          currentBlockIsText = false;
+          // Discard any buffered pre-search text
+          preSearchBuffer = '';
+        } else if (blockType === 'server_tool_result' || blockType === 'tool_result') {
+          currentBlockIsText = false;
+        } else if (blockType === 'text') {
+          currentBlockIsText = true;
+          if (searchActive) {
+            // This text block comes after a search — it might be between searches
+            // Reset for potential next search
+          }
+        }
+      }
+      if (event.type === 'content_block_stop') {
+        if (searchActive && !currentBlockIsText) {
+          searchCompleted = true;
         }
       }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        if (!seenSearch || inAnswerBlock) {
-          // Stream it — either no search was used (direct answer) or this is post-search answer
+        if (searchCompleted) {
+          // Post-search: stream directly
           res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
+        } else if (!searchActive) {
+          // Pre-search: buffer in case search comes later
+          preSearchBuffer += event.delta.text;
         }
-        // Skip pre-search narration text blocks
+        // During active search: skip (tool-related text)
       }
+    }
+
+    // If no search was used, flush the buffer (it's the actual answer)
+    if (!searchActive && preSearchBuffer) {
+      res.write(`data: ${JSON.stringify({ type: 'text', content: preSearchBuffer })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
@@ -199,23 +223,40 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
       messages
     });
 
-    let seenSearch = false;
-    let inAnswerBlock = false;
+    let preSearchBuffer = '';
+    let searchActive = false;
+    let searchCompleted = false;
+    let currentBlockIsText = false;
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
-        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
-          seenSearch = true;
-          inAnswerBlock = false;
-        } else if (event.content_block?.type === 'text') {
-          inAnswerBlock = seenSearch;
+        const blockType = event.content_block?.type;
+        if (blockType === 'server_tool_use' || blockType === 'tool_use') {
+          searchActive = true;
+          currentBlockIsText = false;
+          preSearchBuffer = '';
+        } else if (blockType === 'text') {
+          currentBlockIsText = true;
+        } else {
+          currentBlockIsText = false;
+        }
+      }
+      if (event.type === 'content_block_stop') {
+        if (searchActive && !currentBlockIsText) {
+          searchCompleted = true;
         }
       }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        if (!seenSearch || inAnswerBlock) {
+        if (searchCompleted) {
           res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
+        } else if (!searchActive) {
+          preSearchBuffer += event.delta.text;
         }
       }
+    }
+
+    if (!searchActive && preSearchBuffer) {
+      res.write(`data: ${JSON.stringify({ type: 'text', content: preSearchBuffer })}\n\n`);
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);

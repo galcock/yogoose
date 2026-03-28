@@ -226,7 +226,7 @@ function detectIntent(query) {
   // Skip for single generic words
   if (words.length <= 2 && !(words.length === 1 && GENERIC_WORDS.has(normalized))) {
     const searchKey = normalized.replace(/[^a-z0-9]/g, '');
-    if (searchKey.length >= 3) {
+    if (searchKey.length >= 5) {
       const trieResults = trie.search(searchKey);
       if (trieResults.length > 0) {
         // Deduplicate
