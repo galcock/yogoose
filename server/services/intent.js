@@ -223,7 +223,10 @@ function detectIntent(query) {
     'math', 'work', 'play', 'love', 'life', 'time', 'call', 'plan',
     'save', 'send', 'post', 'link', 'note', 'file', 'code', 'data',
     'test', 'edit', 'copy', 'move', 'open', 'close', 'list', 'sort',
-    'find', 'view', 'show', 'hide', 'lock', 'vote', 'pick', 'rate'
+    'find', 'view', 'show', 'hide', 'lock', 'vote', 'pick', 'rate',
+    'box', 'dice', 'kick', 'mint', 'loom', 'hike', 'match', 'rover',
+    'bolt', 'rush', 'drop', 'push', 'pull', 'jump',
+    'rock', 'wave', 'ring', 'ball', 'star', 'moon', 'wind'
   ]);
 
   // 6. Prefix match via trie (for partial site names like "rotten" -> rottentomatoes)

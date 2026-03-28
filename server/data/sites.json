@@ -1629,15 +1629,6 @@
     "category": "productivity"
   },
   {
-    "name": "Monday.com",
-    "url": "https://monday.com",
-    "aliases": [
-      "monday",
-      "monday.com"
-    ],
-    "category": "productivity"
-  },
-  {
     "name": "Jira",
     "url": "https://atlassian.net",
     "aliases": [
@@ -2003,16 +1994,6 @@
     "category": "finance"
   },
   {
-    "name": "Mint",
-    "url": "https://mint.intuit.com",
-    "aliases": [
-      "mint",
-      "mint.com",
-      "intuit mint"
-    ],
-    "category": "finance"
-  },
-  {
     "name": "Credit Karma",
     "url": "https://creditkarma.com",
     "aliases": [
@@ -2267,15 +2248,6 @@
     "category": "realestate"
   },
   {
-    "name": "Indeed",
-    "url": "https://indeed.com",
-    "aliases": [
-      "indeed",
-      "indeed.com"
-    ],
-    "category": "jobs"
-  },
-  {
     "name": "Glassdoor",
     "url": "https://glassdoor.com",
     "aliases": [
@@ -2301,16 +2273,6 @@
     "aliases": [
       "monster jobs",
       "monster.com"
-    ],
-    "category": "jobs"
-  },
-  {
-    "name": "Dice",
-    "url": "https://dice.com",
-    "aliases": [
-      "dice",
-      "dice.com",
-      "dice jobs"
     ],
     "category": "jobs"
   },
@@ -2995,15 +2957,6 @@
     "category": "live"
   },
   {
-    "name": "Kick",
-    "url": "https://kick.com",
-    "aliases": [
-      "kick",
-      "kick.com"
-    ],
-    "category": "live"
-  },
-  {
     "name": "Apple",
     "url": "https://apple.com",
     "aliases": [
@@ -3189,24 +3142,6 @@
     "aliases": [
       "bumble",
       "bumble.com"
-    ],
-    "category": "dating"
-  },
-  {
-    "name": "Hinge",
-    "url": "https://hinge.co",
-    "aliases": [
-      "hinge",
-      "hinge.co"
-    ],
-    "category": "dating"
-  },
-  {
-    "name": "Match",
-    "url": "https://match.com",
-    "aliases": [
-      "match",
-      "match.com"
     ],
     "category": "dating"
   },
@@ -3769,15 +3704,6 @@
     "aliases": [
       "roku",
       "roku.com"
-    ],
-    "category": "streaming"
-  },
-  {
-    "name": "Plex",
-    "url": "https://plex.tv",
-    "aliases": [
-      "plex",
-      "plex.tv"
     ],
     "category": "streaming"
   },
@@ -4602,15 +4528,6 @@
     "category": "pets"
   },
   {
-    "name": "Rover",
-    "url": "https://rover.com",
-    "aliases": [
-      "rover",
-      "rover.com"
-    ],
-    "category": "pets"
-  },
-  {
     "name": "BetterHelp",
     "url": "https://betterhelp.com",
     "aliases": [
@@ -4651,31 +4568,12 @@
     "category": "filesharing"
   },
   {
-    "name": "Box",
-    "url": "https://box.com",
-    "aliases": [
-      "box",
-      "box.com",
-      "box cloud"
-    ],
-    "category": "filesharing"
-  },
-  {
     "name": "ClickUp",
     "url": "https://clickup.com",
     "aliases": [
       "clickup",
       "click up",
       "clickup.com"
-    ],
-    "category": "productivity"
-  },
-  {
-    "name": "Loom",
-    "url": "https://loom.com",
-    "aliases": [
-      "loom",
-      "loom.com"
     ],
     "category": "productivity"
   },
