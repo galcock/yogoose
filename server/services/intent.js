@@ -652,6 +652,20 @@ const TOPIC_KEYWORDS = {
 // Generate search-specific fallback links using the query
 function getDefaultSites(query) {
   const q = encodeURIComponent(query);
+  // For proper-noun-like queries (could be a movie, show, person, place),
+  // show IMDb + Rotten Tomatoes + Wikipedia instead of Reddit/YouTube
+  const words = query.trim().split(/\s+/);
+  const looksLikeProperNoun = words.length >= 2 && words.every(w => /^[A-Z]/.test(w) || w.length <= 3);
+  const looksLikeTitle = words.length >= 2;
+
+  if (looksLikeTitle) {
+    return [
+      { name: `${query} on IMDb`, url: `https://www.imdb.com/find/?q=${q}` },
+      { name: `${query} on Rotten Tomatoes`, url: `https://www.rottentomatoes.com/search?search=${q}` },
+      { name: `${query} on Wikipedia`, url: `https://en.wikipedia.org/w/index.php?search=${q}` }
+    ];
+  }
+
   return [
     { name: `${query} on Wikipedia`, url: `https://en.wikipedia.org/w/index.php?search=${q}` },
     { name: `${query} on Reddit`, url: `https://www.reddit.com/search/?q=${q}` },
