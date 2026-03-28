@@ -154,53 +154,45 @@ async function streamResponse(query, res, timezone = 'America/Los_Angeles', form
       messages: [{ role: 'user', content: format === 'news' ? 'Show me today\'s top news headlines' : query }]
     });
 
-    // Strategy: buffer text before any search tool is used.
-    // If search happens, discard the buffer (it's narration).
-    // Stream everything after the last search result.
-    let preSearchBuffer = '';
-    let searchActive = false;  // true while a search tool is being used
-    let searchCompleted = false;  // true after search results come back
-    let currentBlockIsText = false;
+    // Simple approach: collect all text blocks, send them at end with narration stripped
+    // This sacrifices true streaming but guarantees clean output
+    let allText = '';
+    let usedSearch = false;
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
         const blockType = event.content_block?.type;
         if (blockType === 'server_tool_use' || blockType === 'tool_use') {
-          searchActive = true;
-          currentBlockIsText = false;
-          // Discard any buffered pre-search text
-          preSearchBuffer = '';
-        } else if (blockType === 'server_tool_result' || blockType === 'tool_result') {
-          currentBlockIsText = false;
-        } else if (blockType === 'text') {
-          currentBlockIsText = true;
-          if (searchActive) {
-            // This text block comes after a search — it might be between searches
-            // Reset for potential next search
-          }
-        }
-      }
-      if (event.type === 'content_block_stop') {
-        if (searchActive && !currentBlockIsText) {
-          searchCompleted = true;
+          usedSearch = true;
         }
       }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        if (searchCompleted) {
-          // Post-search: stream directly
-          res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
-        } else if (!searchActive) {
-          // Pre-search: buffer in case search comes later
-          preSearchBuffer += event.delta.text;
-        }
-        // During active search: skip (tool-related text)
+        allText += event.delta.text;
       }
     }
 
-    // If no search was used, flush the buffer (it's the actual answer)
-    if (!searchActive && preSearchBuffer) {
-      res.write(`data: ${JSON.stringify({ type: 'text', content: preSearchBuffer })}\n\n`);
+    // If search was used, strip narration from the beginning
+    if (usedSearch) {
+      // Remove everything before the actual answer
+      // Pattern: narration text followed by the real answer
+      const narrationPatterns = [
+        /^.*?(?:Let me|I'll|I can see|I need to|Looking at|Based on|From the|According to|The search)[^.]*\.\s*/s,
+      ];
+      for (const pattern of narrationPatterns) {
+        const cleaned = allText.replace(pattern, '');
+        // Only use cleaned version if we still have substantial text
+        if (cleaned.length > allText.length * 0.3) {
+          allText = cleaned;
+          break;
+        }
+      }
     }
+
+    // Clean up concatenation issues
+    allText = allText.replace(/\.([A-Z])/g, '. $1').trim();
+
+    // Send the clean text
+    res.write(`data: ${JSON.stringify({ type: 'text', content: allText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
@@ -234,41 +226,35 @@ async function streamFollowup(query, history, res, timezone = 'America/Los_Angel
       messages
     });
 
-    let preSearchBuffer = '';
-    let searchActive = false;
-    let searchCompleted = false;
-    let currentBlockIsText = false;
+    let allText = '';
+    let usedSearch = false;
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
-        const blockType = event.content_block?.type;
-        if (blockType === 'server_tool_use' || blockType === 'tool_use') {
-          searchActive = true;
-          currentBlockIsText = false;
-          preSearchBuffer = '';
-        } else if (blockType === 'text') {
-          currentBlockIsText = true;
-        } else {
-          currentBlockIsText = false;
-        }
-      }
-      if (event.type === 'content_block_stop') {
-        if (searchActive && !currentBlockIsText) {
-          searchCompleted = true;
+        if (event.content_block?.type === 'server_tool_use' || event.content_block?.type === 'tool_use') {
+          usedSearch = true;
         }
       }
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        if (searchCompleted) {
-          res.write(`data: ${JSON.stringify({ type: 'text', content: event.delta.text })}\n\n`);
-        } else if (!searchActive) {
-          preSearchBuffer += event.delta.text;
+        allText += event.delta.text;
+      }
+    }
+
+    if (usedSearch) {
+      const narrationPatterns = [
+        /^.*?(?:Let me|I'll|I can see|I need to|Looking at|Based on|From the|According to|The search)[^.]*\.\s*/s,
+      ];
+      for (const pattern of narrationPatterns) {
+        const cleaned = allText.replace(pattern, '');
+        if (cleaned.length > allText.length * 0.3) {
+          allText = cleaned;
+          break;
         }
       }
     }
 
-    if (!searchActive && preSearchBuffer) {
-      res.write(`data: ${JSON.stringify({ type: 'text', content: preSearchBuffer })}\n\n`);
-    }
+    allText = allText.replace(/\.([A-Z])/g, '. $1').trim();
+    res.write(`data: ${JSON.stringify({ type: 'text', content: allText })}\n\n`);
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
