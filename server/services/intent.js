@@ -219,7 +219,11 @@ function detectIntent(query) {
     'recipe', 'dinner', 'lunch', 'snack', 'pizza', 'chicken', 'steak',
     'coffee', 'juice', 'cream', 'sugar', 'bread', 'fruit', 'salad',
     'news', 'food', 'cars', 'jobs', 'maps', 'pets', 'home', 'shop',
-    'blog', 'wiki', 'chat', 'mail', 'help', 'info', 'tips', 'deals'
+    'blog', 'wiki', 'chat', 'mail', 'help', 'info', 'tips', 'deals',
+    'math', 'work', 'play', 'love', 'life', 'time', 'call', 'plan',
+    'save', 'send', 'post', 'link', 'note', 'file', 'code', 'data',
+    'test', 'edit', 'copy', 'move', 'open', 'close', 'list', 'sort',
+    'find', 'view', 'show', 'hide', 'lock', 'vote', 'pick', 'rate'
   ]);
 
   // 6. Prefix match via trie (for partial site names like "rotten" -> rottentomatoes)

@@ -117,6 +117,47 @@ body {
   opacity: 1;
 }
 
+/* === TRENDING SEARCHES === */
+.trending-section {
+  margin-top: 16px;
+  max-width: 584px;
+  width: 100%;
+}
+
+.trending-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.trending-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.trending-chip:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.trending-chip-icon {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
 /* === SEARCH BAR === */
 .search-container {
   width: 100%;
@@ -799,10 +840,13 @@ body {
 
 /* === RESPONSIVE === */
 @media (max-width: 600px) {
-  .logo { font-size: 42px; }
+  .home { justify-content: flex-start; padding-top: 15vh; }
+  .logo { font-size: 42px; margin-bottom: 20px; }
+  .goose-mascot svg { width: 50px; height: 50px; }
   .search-bar { height: 44px; font-size: 15px; }
   .results-header { flex-direction: column; gap: 12px; }
   .results-search-container { width: 100%; }
   .cta-text { font-size: 13px; }
   .ai-response { font-size: 15px; }
+  .trending-section { padding: 0 10px; }
 }

@@ -55,6 +55,10 @@
 
     <div class="ambient-ticker" id="ambientTicker" aria-hidden="true"></div>
 
+    <div class="trending-section" id="trendingSection">
+      <div class="trending-chips" id="trendingChips"></div>
+    </div>
+
     <div class="cta-section">
       <p class="cta-text">
         Stop switching between Google and ChatGPT.<br>
@@ -76,8 +80,29 @@
 
   <script src="/js/search.js"></script>
   <script>
-    // Ambient ticker — lazy loaded, never blocks page
-    setTimeout(() => {
+    // Trending searches — instant, no API call
+    {
+      const chips = document.getElementById('trendingChips');
+      const trending = [
+        { text: 'news', icon: '📰' },
+        { text: 'weather', icon: '☀️' },
+        { text: 'markets', icon: '📈' },
+        { text: 'lakers score', icon: '🏀' },
+        { text: 'what is AI', icon: '✨' },
+        { text: 'best movies 2026', icon: '🎬' },
+      ];
+      if (chips) {
+        chips.innerHTML = trending.map(t =>
+          `<a href="/results.html?q=${encodeURIComponent(t.text)}" class="trending-chip">
+            <span class="trending-chip-icon">${t.icon}</span>${t.text}
+          </a>`
+        ).join('');
+      }
+    }
+  </script>
+  <script>
+    // Ambient ticker — fires immediately but async, never blocks page
+    {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       fetch(`/api/ambient?tz=${encodeURIComponent(tz)}`)
         .then(r => r.json())
@@ -108,7 +133,7 @@
           setInterval(show, 5000);
         })
         .catch(() => {}); // Silently fail — ambient is non-critical
-    }, 2000); // Wait 2s after page load before fetching
+    }
   </script>
 </body>
 </html>
