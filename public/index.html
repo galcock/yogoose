@@ -101,7 +101,7 @@
     }
   </script>
   <script>
-    // Ambient ticker — fires immediately but async, never blocks page
+    // Ambient ticker — single div that fades text in and out
     {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       fetch(`/api/ambient?tz=${encodeURIComponent(tz)}`)
@@ -111,28 +111,22 @@
           const ticker = document.getElementById('ambientTicker');
           if (!ticker) return;
 
-          // Create all items
-          items.forEach(text => {
-            const div = document.createElement('div');
-            div.className = 'ambient-item';
-            div.textContent = text;
-            ticker.appendChild(div);
-          });
-
-          // Cycle through them
           let current = 0;
-          const els = ticker.querySelectorAll('.ambient-item');
-          if (els.length === 0) return;
+          ticker.textContent = items[0];
+          ticker.style.opacity = '0.5';
 
-          function show() {
-            els.forEach(el => el.classList.remove('active'));
-            els[current].classList.add('active');
-            current = (current + 1) % els.length;
-          }
-          show();
-          setInterval(show, 5000);
+          setInterval(() => {
+            // Fade out
+            ticker.style.opacity = '0';
+            setTimeout(() => {
+              current = (current + 1) % items.length;
+              ticker.textContent = items[current];
+              // Fade in
+              ticker.style.opacity = '0.5';
+            }, 800);
+          }, 5000);
         })
-        .catch(() => {}); // Silently fail — ambient is non-critical
+        .catch(() => {});
     }
   </script>
 </body>
